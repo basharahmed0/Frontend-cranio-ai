@@ -7,15 +7,16 @@ export const BASE_URL =
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
+  const { skipAuthRedirect = false, ...fetchOptions } = options;
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-      ...options,
+      ...fetchOptions,
       headers: {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "69420",
         ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
+        ...fetchOptions.headers,
       },
     });
 
@@ -25,8 +26,10 @@ export const apiRequest = async (endpoint, options = {}) => {
     if (res.status === 401) {
       console.log("401 on endpoint:", endpoint);
       console.error("Unauthorized - login again");
-      localStorage.removeItem("token");
-      window.location.href = "/signin";
+      if (!skipAuthRedirect) {
+        localStorage.removeItem("token");
+        window.location.href = "/signin";
+      }
       throw new Error("Unauthorized");
     }
 

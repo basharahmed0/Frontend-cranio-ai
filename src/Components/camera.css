@@ -56,6 +56,8 @@
   padding: 24px;
   flex: 1 1 480px;
   max-width: 560px;
+  display: flex;
+  flex-direction: column;
 }
 
 .video-wrapper {
@@ -104,6 +106,80 @@
   font-size: 15px;
 }
 
+.video-overlay--idle {
+  gap: 10px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.video-overlay__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.video-overlay__hint {
+  margin: 0;
+  max-width: 280px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.video-overlay__cta {
+  margin-top: 8px;
+}
+
+.video-overlay--error {
+  gap: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  background: rgba(26, 26, 46, 0.96);
+}
+
+.video-overlay__errortext {
+  margin: 0;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ffb4b4;
+}
+
+.preflight-banner {
+  box-sizing: border-box;
+}
+
+/* Controls — keep visible on short viewports */
+.camera-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  bottom: 8px;
+  z-index: 3;
+  padding: 12px 0 4px;
+  margin-bottom: -4px;
+  background: linear-gradient(
+    to top,
+    #ffffff 65%,
+    rgba(255, 255, 255, 0.92) 85%,
+    rgba(255, 255, 255, 0)
+  );
+}
+
+@media (max-height: 720px) {
+  .camera-page {
+    padding-top: 24px;
+    padding-bottom: 32px;
+  }
+
+  .camera-header {
+    margin-bottom: 20px;
+    padding: 20px 24px;
+  }
+}
+
 /* Scan line animation */
 .scan-line {
   position: absolute;
@@ -130,6 +206,7 @@
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 20px;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -168,13 +245,6 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-/* Controls */
-.camera-controls {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
 }
 
 .btn-primary {

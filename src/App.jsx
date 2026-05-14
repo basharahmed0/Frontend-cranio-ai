@@ -71,12 +71,12 @@ function App() {
           }
         />
 
+        <Route path="/camera" element={<Camera />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="*"
           element={<h1 style={{ color: "red" }}>Page Not Found</h1>}
         />
-        <Route path="/camera" element={<Camera />} />
-        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
