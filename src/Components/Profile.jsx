@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./Profile.css";
+import "./profile.css";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "./api";
 
