@@ -1,0 +1,106 @@
+.signuppage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.container {
+  width: 90%;
+  max-width: 380px;
+  margin: auto;
+
+  text-align: center;
+}
+
+.logo img {
+  width: 60px;
+  margin-bottom: 8px;
+}
+
+.logo h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+.logo p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.data form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.data label {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 30px;
+  color: #060606;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.data input {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+  background-color: #fff;
+  color: #111;
+}
+
+.data input:focus {
+  border-color: #6c63ff;
+  box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.15);
+}
+
+.data button {
+  margin-top: 18px;
+  height: 45px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #6c63ff, #7c7af2);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.icons {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.icons img {
+  width: 38px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.icons img:hover {
+  transform: scale(1.1);
+}
+
+.account {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.account a {
+  color: #6c63ff;
+  text-decoration: none;
+}
