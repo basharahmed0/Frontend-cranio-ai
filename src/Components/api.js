@@ -1,4 +1,9 @@
-const BASE_URL = "https://crainoai.runasp.net";
+// Undefined → production default. Empty string (e.g. .env.development) → same-origin + Vite /api proxy.
+const rawBase = import.meta.env.VITE_API_BASE_URL;
+export const BASE_URL =
+  rawBase === undefined
+    ? "https://crainoai.runasp.net"
+    : String(rawBase).trim().replace(/\/$/, "");
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");

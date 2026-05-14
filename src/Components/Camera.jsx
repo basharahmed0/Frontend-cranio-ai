@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest } from "./api";
+import { apiRequest, BASE_URL } from "./api";
 import "./camera.css";
 
 const Camera = () => {
@@ -13,6 +13,7 @@ const Camera = () => {
   const [result, setResult] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [error, setError] = useState("");
+  const [analysisError, setAnalysisError] = useState("");
   const [frameCount, setFrameCount] = useState(0);
   const [analysisHistory, setAnalysisHistory] = useState([]);
 
@@ -23,6 +24,7 @@ const Camera = () => {
     try {
       setStatus("starting");
       setError("");
+      setAnalysisError("");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
@@ -84,17 +86,47 @@ const Camera = () => {
         formData.append("image", blob, "frame.jpg");
 
         const token = localStorage.getItem("token");
-        const res = await fetch(
-          "https://crainoai.runasp.net/api/Analysis/analyze",
-          {
-            method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            body: formData,
+        const analyzeUrl = `${BASE_URL}/api/Analysis/analyze`;
+        const res = await fetch(analyzeUrl, {
+          method: "POST",
+          headers: {
+            "ngrok-skip-browser-warning": "69420",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-        );
+          body: formData,
+        });
 
-        const json = await res.json();
+        const text = await res.text();
+        let json = null;
+        if (text) {
+          try {
+            json = JSON.parse(text);
+          } catch {
+            setAnalysisError(
+              res.ok
+                ? "رد غير متوقع من الخادم."
+                : `خطأ ${res.status}: الرد ليس JSON`,
+            );
+            setFrameCount((c) => c + 1);
+            setStatus("running");
+            return;
+          }
+        }
+
+        if (!res.ok) {
+          const msg =
+            json?.message ||
+            json?.Message ||
+            (typeof json === "string" ? json : null) ||
+            `فشل التحليل (${res.status})`;
+          setAnalysisError(String(msg));
+          setFrameCount((c) => c + 1);
+          setStatus("running");
+          return;
+        }
+
         console.log("Analysis response:", json);
+        setAnalysisError("");
 
         // response shape: { success, prediction: { label, confidence } }
         if (json?.success && json?.prediction) {
@@ -114,12 +146,17 @@ const Camera = () => {
               label,
             },
           ]);
+        } else {
+          setAnalysisError("الخادم لم يُرجع نتيجة تحليل صالحة.");
         }
 
         setFrameCount((c) => c + 1);
         setStatus("running");
       } catch (err) {
         console.error("Analysis error:", err);
+        setAnalysisError(
+          err?.message ? `شبكة: ${err.message}` : "تعذّر الاتصال بالخادم.",
+        );
         setStatus("running");
       }
     }, 3000);
@@ -231,6 +268,24 @@ const Camera = () => {
             <span>{getStatusText()}</span>
           </div>
 
+          {analysisError ? (
+            <div
+              className="analysis-error-banner"
+              style={{
+                marginTop: 8,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "#ffe8e6",
+                color: "#c00",
+                fontSize: 14,
+                lineHeight: 1.4,
+              }}
+              role="alert"
+            >
+              {analysisError}
+            </div>
+          ) : null}
+
           {/* Controls */}
           <div className="camera-controls">
             {status === "idle" || status === "error" ? (
@@ -252,6 +307,7 @@ const Camera = () => {
                     setResult(null);
                     setFrameCount(0);
                     setAnalysisHistory([]);
+                    setAnalysisError("");
                   }}
                 >
                   جلسة جديدة
