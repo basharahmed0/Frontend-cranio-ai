@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest, BASE_URL } from "./api";
+import { apiRequest } from "./api";
 import "./camera.css";
 
 const Camera = () => {
@@ -13,133 +13,46 @@ const Camera = () => {
   const [result, setResult] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [error, setError] = useState("");
-  const [analysisError, setAnalysisError] = useState("");
-  const [sessionWarning, setSessionWarning] = useState("");
-  const [preflightError, setPreflightError] = useState("");
   const [frameCount, setFrameCount] = useState(0);
   const [analysisHistory, setAnalysisHistory] = useState([]);
 
   const navigate = useNavigate();
 
-  const mapCameraError = (err) => {
-    const name = err?.name;
-    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-      return "تم رفض إذن الكاميرا. افتح إعدادات المتصفح للموقع واسمح بالكاميرا، ثم أعد المحاولة.";
-    }
-    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-      return "لم يُعثر على كاميرا. تأكد من توصيل الكاميرا وعدم تعطيلها.";
-    }
-    if (name === "NotReadableError" || name === "TrackStartError") {
-      return "الكاميرا مستخدمة من تطبيق أو تبويب آخر. أغلقه ثم أعد المحاولة.";
-    }
-    if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
-      return "إعدادات الكاميرا غير مدعومة على هذا الجهاز. جرّب زر إعادة المحاولة.";
-    }
-    const detail = err?.message || name;
-    return `تعذّر تشغيل الكاميرا${detail ? ` (${detail})` : ""}. استخدم http://localhost أو https، واسمح بالوصول عند الطلب.`;
-  };
-
-  const acquireCameraStream = async () => {
-    const md = navigator.mediaDevices;
-    if (!md?.getUserMedia) {
-      throw new Error("NO_GET_USER_MEDIA");
-    }
-    const preferred = {
-      video: {
-        facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-      },
-    };
-    try {
-      return await md.getUserMedia(preferred);
-    } catch (first) {
-      try {
-        return await md.getUserMedia({ video: true });
-      } catch {
-        throw first;
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!window.isSecureContext) {
-      setPreflightError(
-        "المتصفح يحتاج سياقًا آمناً للكاميرا. افتح التطبيق عبر http://localhost:5173 أو https — لا تستخدم عنوان IP على الشبكة مع http.",
-      );
-      return;
-    }
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setPreflightError(
-        "المتصفح لا يدعم الوصول للكاميرا من هذا العنوان. جرّب Chrome/Edge على localhost أو رابط https.",
-      );
-      return;
-    }
-    setPreflightError("");
-  }, []);
-
-  // Start camera: show the video feed first, then link a server session (optional).
+  // Start camera
   const startCamera = async () => {
-    setStatus("starting");
-    setError("");
-    setAnalysisError("");
-    setSessionWarning("");
-
-    let stream = null;
     try {
-      stream = await acquireCameraStream();
+      setStatus("starting");
+      setError("");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 640, height: 480 },
+      });
       streamRef.current = stream;
-      const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-        await video.play();
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
       }
 
-      // Let the user see the camera immediately (do not block on Sessions API).
+      // Create a new session
+      const sessionRes = await apiRequest("/api/Sessions", {
+        method: "POST",
+        body: JSON.stringify({ notes: "جلسة متابعة بالكاميرا" }),
+      });
+
+      // handle different response shapes
+      const newSessionId = sessionRes?.data?.id ?? sessionRes?.id ?? null;
+      setSessionId(newSessionId);
+
+      // Start the session
+      if (newSessionId) {
+        await apiRequest(`/api/Sessions/${newSessionId}/start`, {
+          method: "POST",
+        });
+      }
+
       setStatus("running");
       startSendingFrames();
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setSessionWarning(
-          "لم تسجّل الدخول: سيتم التحليل فقط دون حفظ جلسة على الحساب.",
-        );
-        return;
-      }
-
-      try {
-        const sessionRes = await apiRequest("/api/Sessions", {
-          method: "POST",
-          body: JSON.stringify({ notes: "جلسة متابعة بالكاميرا" }),
-          skipAuthRedirect: true,
-        });
-
-        const newSessionId = sessionRes?.data?.id ?? sessionRes?.id ?? null;
-        setSessionId(newSessionId);
-
-        if (newSessionId) {
-          await apiRequest(`/api/Sessions/${newSessionId}/start`, {
-            method: "POST",
-            skipAuthRedirect: true,
-          });
-        }
-      } catch {
-        setSessionWarning(
-          "تعذّر ربط الجلسة بالخادم (تحقق من تسجيل الدخول). التحليل سيستمر.",
-        );
-      }
-    } catch (err) {
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-      if (err?.message === "NO_GET_USER_MEDIA") {
-        setError(
-          "المتصفح لا يتيح استخدام الكاميرا من هذا العنوان. استخدم localhost أو https.",
-        );
-      } else {
-        setError(mapCameraError(err));
-      }
+    } catch {
+      setError("تعذّر الوصول إلى الكاميرا. تأكد من منح الإذن.");
       setStatus("error");
     }
   };
@@ -171,78 +84,52 @@ const Camera = () => {
         formData.append("image", blob, "frame.jpg");
 
         const token = localStorage.getItem("token");
-        const analyzeUrl = `${BASE_URL}/api/Analysis/analyze`;
-        const res = await fetch(analyzeUrl, {
-          method: "POST",
-          headers: {
-            "ngrok-skip-browser-warning": "69420",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        const res = await fetch(
+          "https://crainoai.runasp.net/api/Analysis/analyze",
+          {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: formData,
           },
-          body: formData,
-        });
+        );
 
-        const text = await res.text();
-        let json = null;
-        if (text) {
-          try {
-            json = JSON.parse(text);
-          } catch {
-            setAnalysisError(
-              res.ok
-                ? "رد غير متوقع من الخادم."
-                : `خطأ ${res.status}: الرد ليس JSON`,
-            );
-            setFrameCount((c) => c + 1);
-            setStatus("running");
-            return;
-          }
-        }
-
-        if (!res.ok) {
-          const msg =
-            json?.message ||
-            json?.Message ||
-            (typeof json === "string" ? json : null) ||
-            `فشل التحليل (${res.status})`;
-          setAnalysisError(String(msg));
-          setFrameCount((c) => c + 1);
-          setStatus("running");
-          return;
-        }
-
+        const json = await res.json();
         console.log("Analysis response:", json);
-        setAnalysisError("");
 
-        // response: { success, prediction: { label, confidence }, predictions?: { eye, eyebrow, mouth } }
+        // response shape: { success, prediction: { label, confidence } }
         if (json?.success && json?.prediction) {
           const { label, confidence } = json.prediction;
 
           const analysisResult = {
-            label,
-            score: confidence ?? 0,
-            regions: json.predictions ?? null,
+            label, // "Mild" | "Moderate" | "Severe" …
+            score: confidence ?? 0, // نسبة الثقة
           };
 
           setResult(analysisResult);
-          setAnalysisHistory((prev) => [
-            ...prev.slice(-4),
-            {
+          setAnalysisHistory((prev) => {
+            const newEntry = {
               time: new Date().toLocaleTimeString("ar-EG"),
+              date: new Date().toISOString(),
               score: confidence ?? 0,
               label,
-            },
-          ]);
-        } else {
-          setAnalysisError("الخادم لم يُرجع نتيجة تحليل صالحة.");
+            };
+            const updated = [...prev.slice(-4), newEntry];
+            // حفظ في localStorage عشان Tracking تقراه
+            try {
+              const existing = JSON.parse(
+                localStorage.getItem("analysisResults") || "[]",
+              );
+              existing.push(newEntry);
+              localStorage.setItem("analysisResults", JSON.stringify(existing));
+            } catch {}
+            return updated;
+          });
         }
 
         setFrameCount((c) => c + 1);
         setStatus("running");
       } catch (err) {
         console.error("Analysis error:", err);
-        setAnalysisError(
-          err?.message ? `شبكة: ${err.message}` : "تعذّر الاتصال بالخادم.",
-        );
         setStatus("running");
       }
     }, 3000);
@@ -259,7 +146,6 @@ const Camera = () => {
         await apiRequest("/api/Sessions/complete", {
           method: "POST",
           body: JSON.stringify({ sessionId, notes: "اكتملت الجلسة" }),
-          skipAuthRedirect: true,
         });
       } catch (e) {
         console.error("Complete session error:", e);
@@ -300,8 +186,6 @@ const Camera = () => {
     const map = {
       Mild: "خفيف",
       Moderate: "متوسط",
-      "Moderate Severe": "شديد نسبياً",
-      Moderate_Severe: "شديد نسبياً",
       Severe: "شديد",
       Normal: "طبيعي",
     };
@@ -322,26 +206,6 @@ const Camera = () => {
         <p>سيتم تحليل حركة وجهك تلقائيًا خلال الجلسة</p>
       </div>
 
-      {preflightError ? (
-        <div
-          className="preflight-banner"
-          role="alert"
-          style={{
-            maxWidth: 1100,
-            margin: "0 auto 20px",
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: "#fff3cd",
-            color: "#664d03",
-            fontSize: 14,
-            lineHeight: 1.5,
-            border: "1px solid #ffc107",
-          }}
-        >
-          {preflightError}
-        </div>
-      ) : null}
-
       <div className="camera-layout">
         {/* Camera Box */}
         <div className="camera-box">
@@ -358,38 +222,9 @@ const Camera = () => {
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
             {status === "idle" && (
-              <div className="video-overlay video-overlay--idle">
-                <div className="camera-icon">📷</div>
-                <p className="video-overlay__title">ابدأ الجلسة لتشغيل الكاميرا</p>
-                <p className="video-overlay__hint">
-                  اضغط الزر، ثم اختر «السماح» عندما يطلب المتصفح الوصول إلى الكاميرا.
-                </p>
-                <button
-                  type="button"
-                  className="btn-primary video-overlay__cta"
-                  onClick={startCamera}
-                >
-                  🎥 بدء الجلسة
-                </button>
-              </div>
-            )}
-
-            {status === "error" && (
-              <div className="video-overlay video-overlay--error">
-                <p className="video-overlay__errortext">{error}</p>
-                <button
-                  type="button"
-                  className="btn-primary video-overlay__cta"
-                  onClick={startCamera}
-                >
-                  إعادة المحاولة
-                </button>
-              </div>
-            )}
-
-            {status === "starting" && (
               <div className="video-overlay">
-                <p>جارٍ طلب إذن الكاميرا...</p>
+                <div className="camera-icon">📷</div>
+                <p>الكاميرا غير مفعّلة</p>
               </div>
             )}
 
@@ -405,42 +240,6 @@ const Camera = () => {
             <span className="status-dot" />
             <span>{getStatusText()}</span>
           </div>
-
-          {sessionWarning ? (
-            <div
-              className="session-warning-banner"
-              style={{
-                marginTop: 8,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: "#fff8e6",
-                color: "#8a5a00",
-                fontSize: 14,
-                lineHeight: 1.4,
-              }}
-              role="status"
-            >
-              {sessionWarning}
-            </div>
-          ) : null}
-
-          {analysisError ? (
-            <div
-              className="analysis-error-banner"
-              style={{
-                marginTop: 8,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: "#ffe8e6",
-                color: "#c00",
-                fontSize: 14,
-                lineHeight: 1.4,
-              }}
-              role="alert"
-            >
-              {analysisError}
-            </div>
-          ) : null}
 
           {/* Controls */}
           <div className="camera-controls">
@@ -463,9 +262,6 @@ const Camera = () => {
                     setResult(null);
                     setFrameCount(0);
                     setAnalysisHistory([]);
-                    setAnalysisError("");
-                    setSessionWarning("");
-                    setError("");
                   }}
                 >
                   جلسة جديدة
@@ -511,40 +307,6 @@ const Camera = () => {
                 >
                   {labelAr(result.label)}
                 </div>
-                <p
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color: "#718096",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  الدرجة المعروضة هي أشدّ نتيجة بين العين والحاجب والفم.
-                </p>
-                {result.regions ? (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      fontSize: 13,
-                      textAlign: "right",
-                      lineHeight: 1.65,
-                      color: "#4a5568",
-                    }}
-                  >
-                    <div>
-                      عين: {labelAr(result.regions.eye?.label)} —{" "}
-                      {Math.round(result.regions.eye?.confidence ?? 0)}%
-                    </div>
-                    <div>
-                      حاجب: {labelAr(result.regions.eyebrow?.label)} —{" "}
-                      {Math.round(result.regions.eyebrow?.confidence ?? 0)}%
-                    </div>
-                    <div>
-                      فم: {labelAr(result.regions.mouth?.label)} —{" "}
-                      {Math.round(result.regions.mouth?.confidence ?? 0)}%
-                    </div>
-                  </div>
-                ) : null}
               </div>
             ) : (
               <div className="no-result">
