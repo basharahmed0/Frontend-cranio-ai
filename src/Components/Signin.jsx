@@ -113,7 +113,7 @@ const Signin = () => {
     <div className="signin-page">
       <div className="signin-Container">
         <div className="Logo">
-          <img src="/image/logo/Logo.png" alt="Cranio ai" />
+          <img src="/image/logo/cranio_ai_b.png" alt="Cranio ai" />
           <h4>Cranio ai</h4>
           <p>يساعدك علي متابعة جلسات العلاج وتقييم حالتك بسهوله</p>
         </div>

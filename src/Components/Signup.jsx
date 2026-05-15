@@ -113,13 +113,11 @@ const Signup = () => {
     }
   };
 
- 
-
   return (
     <div className={styles.signuppage}>
       <div className={styles.container}>
         <div className={styles.logo}>
-          <img src="/image/logo/Logo.png" alt="Cranio ai" />
+          <img src="/image/logo/cranio_ai_b.png" alt="Cranio ai" />
           <h4>Cranio ai</h4>
           <p>يساعدك علي متابعة جلسات العلاج وتقييم حالتك بسهوله</p>
         </div>
@@ -185,7 +183,6 @@ const Signup = () => {
         </div>
 
         <div className={styles.icons}>
-         
           <GoogleLogin
             onSuccess={handleGoogleLogin}
             onError={() => setError("فشل تسجيل الدخول بجوجل")}
