@@ -42,7 +42,7 @@ const PersonalData = ({ onBack }) => {
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem(
         "user",
-        JSON.stringify({ ...storedUser, fullName: form.fullName })
+        JSON.stringify({ ...storedUser, fullName: form.fullName }),
       );
       setMessage({ text: "تم حفظ البيانات بنجاح ✓", type: "success" });
     } catch (err) {
@@ -191,7 +191,7 @@ const FAQPage = ({ onBack }) => {
     {
       question: "كيف أبدأ استخدام التطبيق؟",
       answer:
-        "بعد تسجيل الدخول، سيتم توجيهك تلقائيًا إلى الشاشة الرئيسية. اضغط على \"Rate via Camera\" أو \"Rate via Chat\"، ثم اتبع التعليمات الظاهرة على الشاشة.",
+        'بعد تسجيل الدخول، سيتم توجيهك تلقائيًا إلى الشاشة الرئيسية. اضغط على "Rate via Camera" أو "Rate via Chat"، ثم اتبع التعليمات الظاهرة على الشاشة.',
     },
     {
       question: "ما هي شروط إجراء فحص صحيح؟",
@@ -251,9 +251,10 @@ const FAQPage = ({ onBack }) => {
               border: "1.5px solid #f0f0f0",
               overflow: "hidden",
               transition: "all 0.3s ease",
-              boxShadow: openIndex === index
-                ? "0 4px 15px rgba(108, 71, 255, 0.1)"
-                : "0 1px 3px rgba(0,0,0,0.04)",
+              boxShadow:
+                openIndex === index
+                  ? "0 4px 15px rgba(108, 71, 255, 0.1)"
+                  : "0 1px 3px rgba(0,0,0,0.04)",
               borderColor: openIndex === index ? "#e0d4ff" : "#f0f0f0",
             }}
           >
@@ -289,7 +290,8 @@ const FAQPage = ({ onBack }) => {
                   fontSize: "20px",
                   color: "#6c47ff",
                   transition: "transform 0.3s ease",
-                  transform: openIndex === index ? "rotate(-90deg)" : "rotate(0deg)",
+                  transform:
+                    openIndex === index ? "rotate(-90deg)" : "rotate(0deg)",
                   lineHeight: 1,
                   flexShrink: 0,
                 }}
@@ -314,7 +316,8 @@ const FAQPage = ({ onBack }) => {
                 <div
                   style={{
                     height: "1px",
-                    background: "linear-gradient(to left, transparent, #e8e8e8, transparent)",
+                    background:
+                      "linear-gradient(to left, transparent, #e8e8e8, transparent)",
                     marginBottom: "14px",
                   }}
                 />
@@ -345,7 +348,14 @@ const FAQPage = ({ onBack }) => {
           textAlign: "center",
         }}
       >
-        <p style={{ fontSize: "13px", color: "#6c47ff", margin: 0, fontWeight: "500" }}>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "#6c47ff",
+            margin: 0,
+            fontWeight: "500",
+          }}
+        >
           💬 لم تجد إجابة لسؤالك؟
         </p>
         <p style={{ fontSize: "12px", color: "#888", margin: "6px 0 0 0" }}>
@@ -427,16 +437,33 @@ const ContactUsPage = ({ onBack }) => {
         }}
       >
         <div style={{ fontSize: "42px", marginBottom: "12px" }}>💬</div>
-        <h3 style={{ fontSize: "17px", fontWeight: "700", margin: "0 0 8px 0" }}>
+        <h3
+          style={{ fontSize: "17px", fontWeight: "700", margin: "0 0 8px 0" }}
+        >
           نحن هنا لمساعدتك
         </h3>
-        <p style={{ fontSize: "13px", margin: 0, opacity: 0.9, lineHeight: "1.7" }}>
-          لا تتردد في التواصل معنا في أي وقت، فريق الدعم لدينا متاح على مدار الساعة
+        <p
+          style={{
+            fontSize: "13px",
+            margin: 0,
+            opacity: 0.9,
+            lineHeight: "1.7",
+          }}
+        >
+          لا تتردد في التواصل معنا في أي وقت، فريق الدعم لدينا متاح على مدار
+          الساعة
         </p>
       </div>
 
       {/* Contact Methods */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          marginBottom: "24px",
+        }}
+      >
         {contactMethods.map((method, index) => (
           <div
             key={index}
@@ -453,7 +480,8 @@ const ContactUsPage = ({ onBack }) => {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = "#e0d4ff";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(108, 71, 255, 0.08)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(108, 71, 255, 0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = "#f0f0f0";
@@ -561,9 +589,18 @@ const ContactUsPage = ({ onBack }) => {
           textAlign: "center",
         }}
       >
-        <p style={{ fontSize: "13px", color: "#888", margin: 0, lineHeight: "1.8" }}>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "#888",
+            margin: 0,
+            lineHeight: "1.8",
+          }}
+        >
           🕐 ساعات العمل: يومياً من{" "}
-          <span style={{ fontWeight: "600", color: "#555" }}>9 صباحاً - 9 مساءً</span>
+          <span style={{ fontWeight: "600", color: "#555" }}>
+            9 صباحاً - 9 مساءً
+          </span>
         </p>
       </div>
     </div>
@@ -573,9 +610,17 @@ const ContactUsPage = ({ onBack }) => {
 // =================== ABOUT APP PAGE ===================
 const AboutAppPage = ({ onBack }) => {
   const features = [
-    { icon: "🎯", title: "فحص دقيق", desc: "تحليل متقدم بتقنيات الذكاء الاصطناعي" },
+    {
+      icon: "🎯",
+      title: "فحص دقيق",
+      desc: "تحليل متقدم بتقنيات الذكاء الاصطناعي",
+    },
     { icon: "🔒", title: "خصوصية تامة", desc: "بياناتك مشفرة ومحمية بالكامل" },
-    { icon: "⚡", title: "نتائج فورية", desc: "احصل على تقييمك في ثوانٍ معدودة" },
+    {
+      icon: "⚡",
+      title: "نتائج فورية",
+      desc: "احصل على تقييمك في ثوانٍ معدودة",
+    },
     { icon: "📊", title: "متابعة مستمرة", desc: "تتبع تقدمك وتحسنك عبر الزمن" },
   ];
 
@@ -632,7 +677,14 @@ const AboutAppPage = ({ onBack }) => {
         >
           🩺
         </div>
-        <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#1a1a2e", margin: "0 0 6px 0" }}>
+        <h3
+          style={{
+            fontSize: "20px",
+            fontWeight: "700",
+            color: "#1a1a2e",
+            margin: "0 0 6px 0",
+          }}
+        >
           FaceCheck
         </h3>
         <p style={{ fontSize: "13px", color: "#999", margin: 0 }}>
@@ -659,9 +711,9 @@ const AboutAppPage = ({ onBack }) => {
             textAlign: "center",
           }}
         >
-          FaceCheck هو تطبيق ذكي يُقدم لك تقييمًا مبدئيًا لحالتك الصحية من خلال تحليل
-          الوجه باستخدام تقنيات الذكاء الاصطناعي المتقدمة. نسعى لجعل الرعاية الصحية
-          أكثر سهولة وإتاحةً للجميع.
+          FaceCheck هو تطبيق ذكي يُقدم لك تقييمًا مبدئيًا لحالتك الصحية من خلال
+          تحليل الوجه باستخدام تقنيات الذكاء الاصطناعي المتقدمة. نسعى لجعل
+          الرعاية الصحية أكثر سهولة وإتاحةً للجميع.
         </p>
       </div>
 
@@ -699,7 +751,8 @@ const AboutAppPage = ({ onBack }) => {
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = "#e0d4ff";
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 6px 15px rgba(108, 71, 255, 0.08)";
+              e.currentTarget.style.boxShadow =
+                "0 6px 15px rgba(108, 71, 255, 0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = "#f0f0f0";
@@ -707,7 +760,9 @@ const AboutAppPage = ({ onBack }) => {
               e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <div style={{ fontSize: "30px", marginBottom: "10px" }}>{feature.icon}</div>
+            <div style={{ fontSize: "30px", marginBottom: "10px" }}>
+              {feature.icon}
+            </div>
             <p
               style={{
                 fontSize: "13px",
@@ -718,7 +773,14 @@ const AboutAppPage = ({ onBack }) => {
             >
               {feature.title}
             </p>
-            <p style={{ fontSize: "11px", color: "#999", margin: 0, lineHeight: "1.6" }}>
+            <p
+              style={{
+                fontSize: "11px",
+                color: "#999",
+                margin: 0,
+                lineHeight: "1.6",
+              }}
+            >
               {feature.desc}
             </p>
           </div>
@@ -744,8 +806,8 @@ const AboutAppPage = ({ onBack }) => {
             textAlign: "center",
           }}
         >
-          ⚠️ تنبيه: هذا التطبيق أداة فحص مبدئية فقط ولا يُغني عن استشارة الطبيب المختص
-          للحصول على تشخيص طبي دقيق.
+          ⚠️ تنبيه: هذا التطبيق أداة فحص مبدئية فقط ولا يُغني عن استشارة الطبيب
+          المختص للحصول على تشخيص طبي دقيق.
         </p>
       </div>
 
@@ -813,7 +875,6 @@ const Profile = () => {
 
         if (dashboard) {
           setStats([
-            { value: "4.8", label: "تقييمك" },
             { value: dashboard.completedSessions || 0, label: "جلسات مكتملة" },
             {
               value: `${dashboard.currentImprovement || 0}%`,
