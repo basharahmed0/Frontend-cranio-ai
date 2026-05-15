@@ -113,57 +113,7 @@ const Signup = () => {
     }
   };
 
-  const handleFacebookLogin = () => {
-    if (!window.FB) {
-      setError("Facebook SDK not loaded");
-      return;
-    }
-
-    setLoading(true);
-    window.FB.login(
-      async function (response) {
-        if (response.authResponse) {
-          try {
-            const res = await fetch(`${BASE_URL}/api/Auth/facebook-login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                token: response.authResponse.accessToken,
-              }),
-            });
-
-            const text = await res.text();
-            let data = null;
-            if (text) {
-              try {
-                data = JSON.parse(text);
-              } catch {
-                console.log("Response not JSON:", text);
-              }
-            }
-
-            if (res.ok) {
-              const token = data?.data?.token;
-              if (token) localStorage.setItem("token", token);
-              if (data?.data?.user) {
-                localStorage.setItem("user", JSON.stringify(data.data.user));
-              }
-              navigate("/");
-            } else {
-              setError(data?.message || "فشل تسجيل الدخول بفيسبوك");
-            }
-          } catch (err) {
-            setError("مشكلة في الشبكة: " + err.message);
-          } finally {
-            setLoading(false);
-          }
-        } else {
-          setLoading(false);
-        }
-      },
-      { scope: "public_profile,email" },
-    );
-  };
+ 
 
   return (
     <div className={styles.signuppage}>
@@ -235,12 +185,7 @@ const Signup = () => {
         </div>
 
         <div className={styles.icons}>
-          <img
-            src="/image/buttons/facebook.png"
-            alt="facebook"
-            onClick={handleFacebookLogin}
-            style={{ cursor: loading ? "not-allowed" : "pointer" }}
-          />
+         
           <GoogleLogin
             onSuccess={handleGoogleLogin}
             onError={() => setError("فشل تسجيل الدخول بجوجل")}

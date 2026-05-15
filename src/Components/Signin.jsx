@@ -195,8 +195,6 @@ const Signin = () => {
         </div>
 
         <div className="icons">
-          <img src="/image/buttons/twiter.png" alt="twitter" />
-          <img src="/image/buttons/facebook.png" alt="facebook" />
           <GoogleLogin
             onSuccess={handleGoogleLogin}
             onError={() => setError("فشل تسجيل الدخول بجوجل")}
