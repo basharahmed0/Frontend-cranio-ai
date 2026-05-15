@@ -71,7 +71,15 @@ function App() {
           }
         />
 
-        <Route path="/camera" element={<Camera />} />
+        <Route
+          path="/camera"
+          element={
+            <>
+              <Nav />
+              <Camera />
+            </>
+          }
+        />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="*"
