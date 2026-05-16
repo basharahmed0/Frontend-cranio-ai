@@ -138,8 +138,6 @@ const translations = {
   },
 };
 
-import { createContext, useContext, useState } from "react";
-
 export const LangContext = createContext();
 
 export const LangProvider = ({ children }) => {
