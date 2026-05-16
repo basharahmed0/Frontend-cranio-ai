@@ -4,7 +4,7 @@ import { useLang } from "./LangContext";
 
 const Footer = () => {
   const { t } = useLang();
-  const f = t.footer;
+  const f = t.footer || {};
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
