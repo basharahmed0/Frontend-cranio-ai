@@ -1,83 +1,73 @@
-import React, { useState } from "react";
-import "./nav.css";
+import React from "react";
+import "./Home.css";
 import { NavLink } from "react-router-dom";
+import Footer from "./Footer";
 import { useLang } from "./LangContext";
 
-const Nav = () => {
-  const { t, lang, toggle } = useLang();
-
-  const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState(3);
-  const [showNotificationBadge, setShowNotificationBadge] = useState(true);
-
-  const handleNotificationClick = () => {
-    setOpen(!open);
-    setShowNotificationBadge(false);
-    setNotifications(0);
-  };
+const Home = () => {
+  const { t } = useLang();
+  const h = t.home;
 
   return (
-    <header className="header" dir={t.dir}>
-      {/* Logo */}
-      <div className="header-logo">cranio ai</div>
-
-      {/* Navigation */}
-      <nav className="header-nav">
-        <NavLink to="/" className="nav-item">
-          {t.nav.home}
-        </NavLink>
-        <NavLink
-          to="/traning"
-          className={({ isActive }) =>
-            isActive ? "nav-item active" : "nav-item"
-          }
-        >
-          {t.nav.training}
-        </NavLink>
-        <NavLink to="/tracking" className="nav-item">
-          {t.nav.tracking}
-        </NavLink>
-      </nav>
-
-      {/* Left Icons */}
-      <div className="header-icons">
-        {/* Language Toggle */}
-        <button
-          className="lang-toggle"
-          onClick={toggle}
-          title={lang === "ar" ? "Switch to English" : "التبديل للعربية"}
-        >
-          {lang === "ar" ? "EN" : "ع"}
-        </button>
-
-        {/* Notifications */}
-        <div
-          className="icon-button"
-          title={t.nav.notifications}
-          onClick={handleNotificationClick}
-        >
-          <img src="/image/logo/notf.png" alt="" />
-          {showNotificationBadge && notifications > 0 && (
-            <span className="notification-badge">{notifications}</span>
-          )}
-          {open && (
-            <div className="notification-menu">
-              <p>{t.notifications.new}</p>
-              <p>{t.notifications.updated}</p>
-              <p>{t.notifications.report}</p>
-            </div>
-          )}
+    <>
+      <div className="home-Container">
+        <div className="content">
+          <h1>{h.title}</h1>
+          <p>{h.subtitle}</p>
         </div>
-
-        {/* Profile */}
-        <div className="icon-button" title={t.nav.profile}>
-          <NavLink to="/profile">
-            <img src="/image/logo/profile.png" alt="" />
+        <div className="track">
+          <NavLink to="/camera">
+            <img src="/image/buttons/cam.png" alt="" />
+            <p>{h.cameraBtn}</p>
           </NavLink>
         </div>
       </div>
-    </header>
+
+      <div className="lastbox">
+        <div className="card">
+          <div className="logs">
+            <div className="card-header">
+              <h2>cranio ai</h2>
+              <div className="avatar">C</div>
+            </div>
+            <p className="card-description">{h.description}</p>
+          </div>
+          <div className="features">
+            <div>
+              <span className="check">✔</span> {h.features.reports}
+            </div>
+            <div>
+              <span className="check">✔</span> {h.features.monitoring}
+            </div>
+            <div>
+              <span className="check">✔</span> {h.features.results}
+            </div>
+            <div>
+              <span className="check">✔</span> {h.features.support}
+            </div>
+          </div>
+          <div className="stats">
+            <div>
+              <div className="stat-value">
+                95<span className="percent">%</span>
+              </div>
+              <div className="stat-label">{h.improvement}</div>{" "}
+            </div>
+            <div>
+              500<span className="percent">+</span>
+              <div className="stat-label">{h.sessions}</div>{" "}
+            </div>
+            <div>
+              98<span className="percent">%</span>
+              <div className="stat-label">{h.satisfaction}</div>{" "}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </>
   );
 };
 
-export default Nav;
+export default Home;

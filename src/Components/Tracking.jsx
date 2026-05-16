@@ -10,21 +10,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { apiRequest } from "./api";
-
-// label → Arabic + color
-const labelInfo = (label) => {
-  const map = {
-    Normal: { ar: "طبيعي", color: "#4cd964" },
-    Mild: { ar: "خفيف", color: "#6c47ff" },
-    Moderate: { ar: "متوسط", color: "#ffcc00" },
-    Moderate_Severe: { ar: "شديد نسبياً", color: "#ff8c00" },
-    "Moderate Severe": { ar: "شديد نسبياً", color: "#ff8c00" },
-    Severe: { ar: "شديد", color: "#ff3b30" },
-  };
-  return map[label] ?? { ar: label ?? "—", color: "#999" };
-};
+import { useLang } from "./LangContext";
 
 const Tracking = () => {
+  const { t } = useLang();
+  const tr = t.tracking || {};
+  const cam = t.camera || {};
+
   const [chartData, setChartData] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [localResults, setLocalResults] = useState([]);
@@ -35,6 +27,24 @@ const Tracking = () => {
     avgImprovement: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // ── دالة ترجمة الـ label ──
+  const labelInfo = (label) => {
+    const labelMap = cam.labels || {};
+    const displayName = labelMap[label] || label || "—";
+    const colorMap = {
+      Normal: "#4cd964",
+      Mild: "#6c47ff",
+      Moderate: "#ffcc00",
+      "Moderate Severe": "#ff8c00",
+      Moderate_Severe: "#ff8c00",
+      Severe: "#ff3b30",
+    };
+    return {
+      name: displayName,
+      color: colorMap[label] || "#999",
+    };
+  };
 
   useEffect(() => {
     // ── قراءة نتايج الكاميرا من localStorage ──
@@ -60,7 +70,10 @@ const Tracking = () => {
         const completedSessions = dashboard?.completedSessions || 0;
 
         const formatted = (dashboard?.improvementCurve || []).map((item) => ({
-          name: `جلسة ${item.sessionNumber}`,
+          name:
+            t.lang === "ar"
+              ? `جلسة ${item.sessionNumber}`
+              : `Session ${item.sessionNumber}`,
           value: Math.round(item.improvementPercentage || 0),
         }));
 
@@ -69,7 +82,9 @@ const Tracking = () => {
           const curr = s.improvementPercentage || 0;
           const diff = Math.round(curr - prev);
           return {
-            name: s.sessionName || `جلسة ${i + 1}`,
+            name:
+              s.sessionName ||
+              (t.lang === "ar" ? `جلسة ${i + 1}` : `Session ${i + 1}`),
             value: Math.round(curr),
             change: diff >= 0 ? `+${diff}%` : `${diff}%`,
           };
@@ -101,7 +116,7 @@ const Tracking = () => {
     };
 
     fetchData();
-  }, []);
+  }, [t.lang]);
 
   // ── حساب متوسط الـ confidence من نتايج الكاميرا ──
   const avgConfidence =
@@ -120,7 +135,9 @@ const Tracking = () => {
   if (loading)
     return (
       <div className="fulltracking">
-        <p style={{ padding: "2rem", textAlign: "center" }}>جاري التحميل...</p>
+        <p style={{ padding: "2rem", textAlign: "center" }}>
+          {t.lang === "ar" ? "جاري التحميل..." : "Loading..."}
+        </p>
       </div>
     );
 
@@ -128,8 +145,8 @@ const Tracking = () => {
     <div className="fulltracking">
       <div className="tracking-container">
         <div className="progress-tracking">
-          <h1>التقدم</h1>
-          <p>تابع تحسنك عبر الجلسات العلاجية</p>
+          <h1>{tr.title}</h1>
+          <p>{tr.subtitle}</p>
         </div>
 
         {/* ── إحصائيات ── */}
@@ -137,13 +154,13 @@ const Tracking = () => {
           <div className="stat">
             <ul>
               <li>
-                {summary.improvement}% <span>التحسن الحالي</span>
+                {summary.improvement}% <span>{tr.currentImprovement}</span>
               </li>
               <li>
-                {summary.daysRemaining} <span>عدد ايام التمارين</span>
+                {summary.daysRemaining} <span>{tr.daysRemaining}</span>
               </li>
               <li>
-                {summary.completedSessions} <span>جلسات مكتملة</span>
+                {summary.completedSessions} <span>{tr.completedSessions}</span>
               </li>
               {lastLabel && (
                 <li>
@@ -153,14 +170,14 @@ const Tracking = () => {
                       fontWeight: 700,
                     }}
                   >
-                    {labelInfo(lastLabel).ar}
+                    {labelInfo(lastLabel).name}
                   </span>{" "}
-                  <span>آخر تشخيص</span>
+                  <span>{tr.lastDiagnosis}</span>
                 </li>
               )}
               {avgConfidence && (
                 <li>
-                  {avgConfidence}% <span>متوسط ثقة التحليل</span>
+                  {avgConfidence}% <span>{tr.avgConfidence}</span>
                 </li>
               )}
             </ul>
@@ -170,16 +187,16 @@ const Tracking = () => {
         {/* ── نتايج تحليل الكاميرا ── */}
         {localResults.length > 0 && (
           <div className="camera-results-section">
-            <h2>نتايج تحليل الصور</h2>
+            <h2>{tr.cameraResults}</h2>
 
             <div className="camera-summary">
               <div className="cam-stat">
                 <span className="cam-val">{localResults.length}</span>
-                <span className="cam-label">صورة تم تحليلها</span>
+                <span className="cam-label">{tr.framesAnalyzed}</span>
               </div>
               <div className="cam-stat">
                 <span className="cam-val">{avgConfidence}%</span>
-                <span className="cam-label">متوسط الثقة</span>
+                <span className="cam-label">{tr.avgConfidence}</span>
               </div>
               {lastLabel && (
                 <div className="cam-stat">
@@ -187,9 +204,9 @@ const Tracking = () => {
                     className="cam-val"
                     style={{ color: labelInfo(lastLabel).color }}
                   >
-                    {labelInfo(lastLabel).ar}
+                    {labelInfo(lastLabel).name}
                   </span>
-                  <span className="cam-label">آخر تشخيص</span>
+                  <span className="cam-label">{tr.lastDiagnosis}</span>
                 </div>
               )}
             </div>
@@ -210,7 +227,7 @@ const Tracking = () => {
                           color: info.color,
                         }}
                       >
-                        {info.ar}
+                        {info.name}
                       </span>
                       <div className="frame-bar-wrap">
                         <div
@@ -236,7 +253,7 @@ const Tracking = () => {
                 setLocalResults([]);
               }}
             >
-              🗑 مسح نتايج التحليل
+              {tr.clearResults}
             </button>
           </div>
         )}
@@ -244,7 +261,7 @@ const Tracking = () => {
         {/* ── منحنى التحسن ── */}
         <div className="graph">
           <div className="title">
-            <h2>منحنى التحسن</h2>
+            <h2>{tr.curve}</h2>
           </div>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -262,20 +279,20 @@ const Tracking = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-state">لا توجد جلسات مكتملة حتى الآن</div>
+            <div className="empty-state">{tr.noSessions}</div>
           )}
           <div className="info">
             <p>
-              بمعدل تحسن <span>{summary.avgImprovement}%</span> لكل جلسة، من
-              المتوقع الوصول لـ <span>100%</span> خلال{" "}
-              <span>{summary.daysRemaining} يوم</span>
+              {tr.avgInfo
+                .replace("{avg}", summary.avgImprovement)
+                .replace("{days}", summary.daysRemaining)}
             </p>
           </div>
         </div>
 
         {/* ── تفاصيل الجلسات ── */}
         <div className="details-session">
-          <h2>تفاصيل الجلسات</h2>
+          <h2>{tr.details}</h2>
           {sessions.length > 0 ? (
             sessions.map((session, index) => (
               <div className="session-row" key={index}>
@@ -290,7 +307,7 @@ const Tracking = () => {
             ))
           ) : (
             <p style={{ color: "#aaa", textAlign: "center", padding: "1rem" }}>
-              لا توجد جلسات مسجلة بعد
+              {tr.noSessions}
             </p>
           )}
         </div>

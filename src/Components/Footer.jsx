@@ -17,6 +17,20 @@ const Footer = () => {
     }
   };
 
+  // ── بيانات الـ links والـ contact داخل الكومبوننت ──
+  const quickLinks = [
+    { label: t.nav.home, href: "/" },
+    { label: t.nav.training, href: "/training" },
+    { label: t.nav.tracking, href: "/tracking" },
+    { label: t.nav.profile, href: "/profile" },
+  ];
+
+  const contactInfo = [
+    { icon: "📧", label: t.lang === "ar" ? "البريد" : "Email", value: "[email protected]" },
+    { icon: "📞", label: t.lang === "ar" ? "الهاتف" : "Phone", value: "+20 123 456 789" },
+    { icon: "📍", label: t.lang === "ar" ? "العنوان" : "Address", value: t.lang === "ar" ? "القاهرة، مصر" : "Cairo, Egypt" },
+  ];
+
   return (
     <footer className="footer" dir={t.dir}>
       <div className="footer-container">
@@ -42,7 +56,7 @@ const Footer = () => {
         <div className="footer-section navigation-section">
           <h4 className="section-title">{f.quickLinks}</h4>
           <ul className="links-list">
-            {(f.links || []).map((link, i) => (
+            {quickLinks.map((link, i) => (
               <li key={i}>
                 <a href={link.href} className="footer-link">
                   {link.label}
@@ -56,7 +70,7 @@ const Footer = () => {
         <div className="footer-section contact-section">
           <h4 className="section-title">{f.contactUs}</h4>
           <div className="contact-list">
-            {(f.contact || []).map((c, i) => (
+            {contactInfo.map((c, i) => (
               <div key={i} className="contact-item">
                 <span className="contact-icon">{c.icon}</span>
                 <div className="contact-info">

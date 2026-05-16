@@ -2,8 +2,12 @@ import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL, apiRequest } from "./api";
 import "./camera.css";
+import { useLang } from "./LangContext";
 
 const Camera = () => {
+  const { t } = useLang();
+  const cam = t.camera;
+
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -53,7 +57,7 @@ const Camera = () => {
         }
       }, 100);
     } catch {
-      setAnalysisError("تعذّر الوصول إلى الكاميرا. تأكد من منح الإذن.");
+      setAnalysisError(cam.cameraError);
     }
   };
 
@@ -119,7 +123,9 @@ const Camera = () => {
       }
 
       if (!res.ok) {
-        setAnalysisError(json?.message || `فشل التحليل (${res.status})`);
+        setAnalysisError(
+          json?.message || `${cam.analysisFailed} (${res.status})`,
+        );
         setStatus("error");
         return;
       }
@@ -133,7 +139,7 @@ const Camera = () => {
           regions: json.predictions ?? null,
         });
 
-        // ── حفظ في localStorage عشان Tracking تقراه ──
+        // ── save to localStorage ──
         try {
           const newEntry = {
             time: new Date().toLocaleTimeString("ar-EG"),
@@ -150,7 +156,7 @@ const Camera = () => {
           /* ignore */
         }
 
-        // ── إنشاء جلسة وإنهاؤها عشان يتحسب في التقدم ──
+        // ── create & complete session ──
         try {
           const sessionRes = await apiRequest("/api/Sessions", {
             method: "POST",
@@ -170,16 +176,16 @@ const Camera = () => {
             });
           }
         } catch {
-          /* الجلسة اختيارية — مش هتأثر على التحليل */
+          /* optional */
         }
 
         setStatus("done");
       } else {
-        setAnalysisError("الخادم لم يُرجع نتيجة صالحة.");
+        setAnalysisError(cam.invalidResponse);
         setStatus("error");
       }
     } catch (err) {
-      setAnalysisError(`شبكة: ${err.message}`);
+      setAnalysisError(`${cam.networkError} ${err.message}`);
       setStatus("error");
     }
   };
@@ -193,17 +199,7 @@ const Camera = () => {
     setStatus("idle");
   };
 
-  const labelAr = (label) => {
-    const map = {
-      Mild: "خفيف",
-      Moderate: "متوسط",
-      "Moderate Severe": "شديد نسبياً",
-      Moderate_Severe: "شديد نسبياً",
-      Severe: "شديد",
-      Normal: "طبيعي",
-    };
-    return map[label] ?? label ?? "—";
-  };
+  const getLabelText = (label) => cam.labels?.[label] ?? label ?? "—";
 
   const getScoreColor = (score) => {
     if (score >= 70) return "#4cd964";
@@ -212,10 +208,10 @@ const Camera = () => {
   };
 
   return (
-    <div className="camera-page" dir="rtl">
+    <div className="camera-page" dir={t.dir}>
       <div className="camera-header">
-        <h1>تحليل الصورة</h1>
-        <p>ارفع صورة أو التقط صورة من الكاميرا لتحليل الحالة</p>
+        <h1>{cam.title}</h1>
+        <p>{cam.subtitle}</p>
       </div>
 
       <div className="camera-layout">
@@ -243,21 +239,21 @@ const Camera = () => {
                       textAlign: "center",
                     }}
                   >
-                    اختر طريقة إضافة الصورة
+                    {cam.chooseMethod}
                   </p>
                   <button
                     className="btn-primary"
                     style={{ width: "100%" }}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    📁 رفع صورة من الجهاز
+                    {cam.uploadBtn}
                   </button>
                   <button
                     className="btn-secondary"
                     style={{ width: "100%" }}
                     onClick={openCamera}
                   >
-                    📷 التقاط صورة من الكاميرا
+                    {cam.captureBtn}
                   </button>
                 </div>
               </div>
@@ -275,7 +271,7 @@ const Camera = () => {
                 className="video-feed"
               />
               <canvas ref={canvasRef} style={{ display: "none" }} />
-              <div className="frame-badge">اضغط "التقاط" عندما تكون جاهزاً</div>
+              <div className="frame-badge">{cam.readyToCapture}</div>
             </div>
           )}
 
@@ -306,14 +302,12 @@ const Camera = () => {
           >
             <span className="status-dot" />
             <span>
-              {mode === "choose" && "اختر صورة للبدء"}
-              {mode === "camera" && "الكاميرا مفتوحة — التقط الصورة"}
-              {mode === "preview" &&
-                status === "idle" &&
-                "الصورة جاهزة — اضغط تحليل"}
-              {status === "analyzing" && "جارٍ تحليل الصورة..."}
-              {status === "done" && "اكتمل التحليل ✓"}
-              {status === "error" && "فشل التحليل"}
+              {mode === "choose" && cam.statusChoose}
+              {mode === "camera" && cam.statusCamera}
+              {mode === "preview" && status === "idle" && cam.statusReady}
+              {status === "analyzing" && cam.statusAnalyzing}
+              {status === "done" && cam.statusDone}
+              {status === "error" && cam.statusError}
             </span>
           </div>
 
@@ -339,32 +333,32 @@ const Camera = () => {
                 className="btn-primary"
                 onClick={() => fileInputRef.current?.click()}
               >
-                📁 رفع صورة
+                {cam.uploadShort}
               </button>
             )}
             {mode === "camera" && (
               <div className="done-actions">
                 <button className="btn-primary" onClick={takeSnapshot}>
-                  📸 التقاط
+                  {cam.snapshotBtn}
                 </button>
                 <button className="btn-secondary" onClick={closeCamera}>
-                  إلغاء
+                  {cam.cancelBtn}
                 </button>
               </div>
             )}
             {mode === "preview" && status === "idle" && (
               <div className="done-actions">
                 <button className="btn-primary" onClick={analyzeImage}>
-                  🔍 تحليل الصورة
+                  {cam.analyzeBtn}
                 </button>
                 <button className="btn-secondary" onClick={reset}>
-                  تغيير الصورة
+                  {cam.changePhoto}
                 </button>
               </div>
             )}
             {status === "analyzing" && (
               <button className="btn-danger" disabled style={{ opacity: 0.6 }}>
-                جارٍ التحليل...
+                {cam.analyzingBtn}
               </button>
             )}
             {(status === "done" || status === "error") && (
@@ -373,10 +367,10 @@ const Camera = () => {
                   className="btn-primary"
                   onClick={() => navigate("/tracking")}
                 >
-                  عرض التقدم →
+                  {cam.viewProgress}
                 </button>
                 <button className="btn-secondary" onClick={reset}>
-                  صورة جديدة
+                  {cam.newPhoto}
                 </button>
               </div>
             )}
@@ -386,7 +380,7 @@ const Camera = () => {
         {/* RIGHT: Results */}
         <div className="results-panel">
           <div className="result-card">
-            <h3>نتيجة التحليل</h3>
+            <h3>{cam.resultTitle}</h3>
             {result ? (
               <div className="score-display">
                 <div
@@ -396,7 +390,7 @@ const Camera = () => {
                   <span className="score-number">
                     {Math.round(result.score)}%
                   </span>
-                  <span className="score-label">ثقة</span>
+                  <span className="score-label">{cam.confidence}</span>
                 </div>
                 <div
                   style={{
@@ -410,7 +404,7 @@ const Camera = () => {
                     display: "inline-block",
                   }}
                 >
-                  {labelAr(result.label)}
+                  {getLabelText(result.label)}
                 </div>
                 {result.regions && (
                   <div
@@ -422,11 +416,7 @@ const Camera = () => {
                       gap: 8,
                     }}
                   >
-                    {[
-                      { key: "eye", label: "العين" },
-                      { key: "eyebrow", label: "الحاجب" },
-                      { key: "mouth", label: "الفم" },
-                    ].map(({ key, label }) =>
+                    {["eye", "eyebrow", "mouth"].map((key) =>
                       result.regions[key] ? (
                         <div
                           key={key}
@@ -444,9 +434,11 @@ const Camera = () => {
                               marginBottom: 4,
                             }}
                           >
-                            <span style={{ fontWeight: 600 }}>{label}</span>
+                            <span style={{ fontWeight: 600 }}>
+                              {cam.regions[key]}
+                            </span>
                             <span style={{ color: "#6c47ff", fontWeight: 700 }}>
-                              {labelAr(result.regions[key].label)} —{" "}
+                              {getLabelText(result.regions[key].label)} —{" "}
                               {Math.round(result.regions[key].confidence ?? 0)}%
                             </span>
                           </div>
@@ -477,7 +469,7 @@ const Camera = () => {
               </div>
             ) : (
               <div className="no-result">
-                <p>في انتظار التحليل...</p>
+                <p>{cam.waitingResult}</p>
                 <div className="pulse-dots">
                   <span />
                   <span />
@@ -488,12 +480,11 @@ const Camera = () => {
           </div>
 
           <div className="result-card tips-card">
-            <h3>💡 نصائح للصورة</h3>
+            <h3>{cam.tipsTitle}</h3>
             <ul>
-              <li>تأكد من إضاءة جيدة على وجهك</li>
-              <li>الوجه واضح ومواجه للكاميرا مباشرة</li>
-              <li>لا يوجد حواجب أو نظارات تحجب الوجه</li>
-              <li>صورة واضحة وغير ضبابية</li>
+              {cam.tips.map((tip, i) => (
+                <li key={i}>{tip}</li>
+              ))}
             </ul>
           </div>
         </div>

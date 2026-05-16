@@ -17,7 +17,7 @@ const OneSession = () => {
       const data = [
         {
           id: 1,
-          title: "Facial Muscles(عضلات الوجه)",
+          title: "Facial Muscles (عضلات الوجه)",
           videoUrl: "https://www.youtube.com/embed/oJIk2PyukjY",
         },
         {
@@ -37,7 +37,7 @@ const OneSession = () => {
   };
 
   return (
-    <>
+    <div dir={t.dir}>
       <div className="title-session">
         <h1 className="logosession">{s.logo}</h1>
         <p className="discription">{s.subtitle}</p>
@@ -98,7 +98,7 @@ const OneSession = () => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
