@@ -1,191 +1,159 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest } from "./api";
+import { BASE_URL } from "./api";
 import "./camera.css";
 
 const Camera = () => {
+  const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
-  const intervalRef = useRef(null);
 
-  const [status, setStatus] = useState("idle"); // idle | starting | running | analyzing | done | error
+  const [mode, setMode] = useState("choose"); // choose | camera | preview
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [imageBlob, setImageBlob] = useState(null);
+  const [status, setStatus] = useState("idle"); // idle | analyzing | done | error
   const [result, setResult] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
-  const [error, setError] = useState("");
-  const [frameCount, setFrameCount] = useState(0);
-  const [analysisHistory, setAnalysisHistory] = useState([]);
+  const [analysisError, setAnalysisError] = useState("");
 
   const navigate = useNavigate();
 
-  // Start camera
-  const startCamera = async () => {
+  // ========================
+  // UPLOAD FROM DEVICE
+  // ========================
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageBlob(file);
+    setMode("preview");
+    setResult(null);
+    setAnalysisError("");
+    setStatus("idle");
+  };
+
+  // ========================
+  // OPEN CAMERA
+  // ========================
+  const openCamera = async () => {
     try {
-      setStatus("starting");
-      setError("");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 },
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      // Create a new session
-      const sessionRes = await apiRequest("/api/Sessions", {
-        method: "POST",
-        body: JSON.stringify({ notes: "جلسة متابعة بالكاميرا" }),
-      });
-
-      // handle different response shapes
-      const newSessionId = sessionRes?.data?.id ?? sessionRes?.id ?? null;
-      setSessionId(newSessionId);
-
-      // Start the session
-      if (newSessionId) {
-        await apiRequest(`/api/Sessions/${newSessionId}/start`, {
-          method: "POST",
-        });
-      }
-
-      setStatus("running");
-      startSendingFrames();
+      setMode("camera");
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
     } catch {
-      setError("تعذّر الوصول إلى الكاميرا. تأكد من منح الإذن.");
+      setAnalysisError("تعذّر الوصول إلى الكاميرا. تأكد من منح الإذن.");
+    }
+  };
+
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setMode("choose");
+  };
+
+  // ========================
+  // TAKE SNAPSHOT
+  // ========================
+  const takeSnapshot = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        setImageBlob(blob);
+        setPreviewUrl(canvas.toDataURL("image/jpeg", 0.9));
+        closeCamera();
+        setMode("preview");
+        setResult(null);
+        setAnalysisError("");
+        setStatus("idle");
+      },
+      "image/jpeg",
+      0.9,
+    );
+  };
+
+  // ========================
+  // SEND TO API
+  // ========================
+  const analyzeImage = async () => {
+    if (!imageBlob) return;
+    setStatus("analyzing");
+    setAnalysisError("");
+    try {
+      const formData = new FormData();
+      formData.append("image", imageBlob, "photo.jpg");
+      const res = await fetch(`${BASE_URL}/api/Analysis/analyze`, {
+        method: "POST",
+        headers: {
+          "ngrok-skip-browser-warning": "69420",
+        },
+        body: formData,
+      });
+      const text = await res.text();
+      let json = null;
+      if (text) {
+        try {
+          json = JSON.parse(text);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (!res.ok) {
+        setAnalysisError(json?.message || `فشل التحليل (${res.status})`);
+        setStatus("error");
+        return;
+      }
+      if (json?.success && json?.prediction) {
+        setResult({
+          label: json.prediction.label,
+          score: json.prediction.confidence ?? 0,
+          regions: json.predictions ?? null,
+        });
+        setStatus("done");
+      } else {
+        setAnalysisError("الخادم لم يُرجع نتيجة صالحة.");
+        setStatus("error");
+      }
+    } catch (err) {
+      setAnalysisError(`شبكة: ${err.message}`);
       setStatus("error");
     }
   };
 
-  // Capture frame and return as Blob
-  const captureFrameBlob = () =>
-    new Promise((resolve) => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (!video || !canvas) return resolve(null);
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.8);
-    });
-
-  // Send frames every 3 seconds to /api/Analysis/analyze
-  const startSendingFrames = () => {
-    intervalRef.current = setInterval(async () => {
-      const blob = await captureFrameBlob();
-      if (!blob) return;
-
-      try {
-        setStatus("analyzing");
-
-        // Build FormData — backend expects field name "image"
-        const formData = new FormData();
-        formData.append("image", blob, "frame.jpg");
-
-        const token = localStorage.getItem("token");
-        const res = await fetch(
-          "https://crainoai.runasp.net/api/Analysis/analyze",
-          {
-            method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            body: formData,
-          },
-        );
-
-        const json = await res.json();
-        console.log("Analysis response:", json);
-
-        // response shape: { success, prediction: { label, confidence } }
-        if (json?.success && json?.prediction) {
-          const { label, confidence } = json.prediction;
-
-          const analysisResult = {
-            label, // "Mild" | "Moderate" | "Severe" …
-            score: confidence ?? 0, // نسبة الثقة
-          };
-
-          setResult(analysisResult);
-          setAnalysisHistory((prev) => {
-            const newEntry = {
-              time: new Date().toLocaleTimeString("ar-EG"),
-              date: new Date().toISOString(),
-              score: confidence ?? 0,
-              label,
-            };
-            const updated = [...prev.slice(-4), newEntry];
-            // حفظ في localStorage عشان Tracking تقراه
-            try {
-              const existing = JSON.parse(
-                localStorage.getItem("analysisResults") || "[]",
-              );
-              existing.push(newEntry);
-              localStorage.setItem("analysisResults", JSON.stringify(existing));
-            } catch {}
-            return updated;
-          });
-        }
-
-        setFrameCount((c) => c + 1);
-        setStatus("running");
-      } catch (err) {
-        console.error("Analysis error:", err);
-        setStatus("running");
-      }
-    }, 3000);
+  const reset = () => {
+    setMode("choose");
+    setPreviewUrl(null);
+    setImageBlob(null);
+    setResult(null);
+    setAnalysisError("");
+    setStatus("idle");
   };
 
-  // Stop session
-  const stopSession = async () => {
-    clearInterval(intervalRef.current);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-    }
-    if (sessionId) {
-      try {
-        await apiRequest("/api/Sessions/complete", {
-          method: "POST",
-          body: JSON.stringify({ sessionId, notes: "اكتملت الجلسة" }),
-        });
-      } catch (e) {
-        console.error("Complete session error:", e);
-      }
-    }
-    setStatus("done");
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearInterval(intervalRef.current);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
-    };
-  }, []);
-
-  const getStatusText = () => {
-    switch (status) {
-      case "starting":
-        return "جارٍ تشغيل الكاميرا...";
-      case "running":
-        return "الكاميرا تعمل — جارٍ التحليل";
-      case "analyzing":
-        return "جارٍ تحليل الإطار...";
-      case "done":
-        return "انتهت الجلسة بنجاح ✓";
-      case "error":
-        return error;
-      default:
-        return "اضغط لبدء الجلسة";
-    }
-  };
-
-  // label → Arabic
   const labelAr = (label) => {
     const map = {
       Mild: "خفيف",
       Moderate: "متوسط",
+      "Moderate Severe": "شديد نسبياً",
+      Moderate_Severe: "شديد نسبياً",
       Severe: "شديد",
       Normal: "طبيعي",
     };
@@ -200,54 +168,161 @@ const Camera = () => {
 
   return (
     <div className="camera-page" dir="rtl">
-      {/* Header */}
       <div className="camera-header">
-        <h1>جلسة المتابعة</h1>
-        <p>سيتم تحليل حركة وجهك تلقائيًا خلال الجلسة</p>
+        <h1>تحليل الصورة</h1>
+        <p>ارفع صورة أو التقط صورة من الكاميرا لتحليل الحالة</p>
       </div>
 
       <div className="camera-layout">
-        {/* Camera Box */}
+        {/* LEFT */}
         <div className="camera-box">
-          <div
-            className={`video-wrapper ${status === "analyzing" ? "scanning" : ""}`}
-          >
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="video-feed"
-            />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
-
-            {status === "idle" && (
+          {/* CHOOSE */}
+          {mode === "choose" && (
+            <div className="video-wrapper">
               <div className="video-overlay">
-                <div className="camera-icon">📷</div>
-                <p>الكاميرا غير مفعّلة</p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 16,
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "0 24px",
+                  }}
+                >
+                  <div className="camera-icon">🖼️</div>
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: 14,
+                      textAlign: "center",
+                    }}
+                  >
+                    اختر طريقة إضافة الصورة
+                  </p>
+                  <button
+                    className="btn-primary"
+                    style={{ width: "100%" }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    📁 رفع صورة من الجهاز
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    style={{ width: "100%" }}
+                    onClick={openCamera}
+                  >
+                    📷 التقاط صورة من الكاميرا
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {status === "analyzing" && <div className="scan-line" />}
+          {/* CAMERA LIVE */}
+          {mode === "camera" && (
+            <div className="video-wrapper scanning">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="video-feed"
+              />
+              <canvas ref={canvasRef} style={{ display: "none" }} />
+              <div className="frame-badge">اضغط "التقاط" عندما تكون جاهزاً</div>
+            </div>
+          )}
 
-            {(status === "running" || status === "analyzing") && (
-              <div className="frame-badge">إطار {frameCount}</div>
-            )}
-          </div>
+          {/* PREVIEW */}
+          {mode === "preview" && (
+            <div className="video-wrapper" style={{ background: "#1a1a2e" }}>
+              <canvas ref={canvasRef} style={{ display: "none" }} />
+              <img
+                src={previewUrl}
+                alt="preview"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+              {status === "analyzing" && <div className="scan-line" />}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
 
           {/* Status bar */}
-          <div className={`status-bar status-${status}`}>
+          <div
+            className={`status-bar status-${status === "analyzing" ? "analyzing" : status === "done" ? "done" : status === "error" ? "error" : "idle"}`}
+          >
             <span className="status-dot" />
-            <span>{getStatusText()}</span>
+            <span>
+              {mode === "choose" && "اختر صورة للبدء"}
+              {mode === "camera" && "الكاميرا مفتوحة — التقط الصورة"}
+              {mode === "preview" &&
+                status === "idle" &&
+                "الصورة جاهزة — اضغط تحليل"}
+              {status === "analyzing" && "جارٍ تحليل الصورة..."}
+              {status === "done" && "اكتمل التحليل ✓"}
+              {status === "error" && "فشل التحليل"}
+            </span>
           </div>
+
+          {analysisError && (
+            <div
+              style={{
+                marginTop: 8,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "#ffe8e6",
+                color: "#c00",
+                fontSize: 14,
+              }}
+            >
+              {analysisError}
+            </div>
+          )}
 
           {/* Controls */}
           <div className="camera-controls">
-            {status === "idle" || status === "error" ? (
-              <button className="btn-primary" onClick={startCamera}>
-                🎥 بدء الجلسة
+            {mode === "choose" && (
+              <button
+                className="btn-primary"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                📁 رفع صورة
               </button>
-            ) : status === "done" ? (
+            )}
+            {mode === "camera" && (
+              <div className="done-actions">
+                <button className="btn-primary" onClick={takeSnapshot}>
+                  📸 التقاط
+                </button>
+                <button className="btn-secondary" onClick={closeCamera}>
+                  إلغاء
+                </button>
+              </div>
+            )}
+            {mode === "preview" && status === "idle" && (
+              <div className="done-actions">
+                <button className="btn-primary" onClick={analyzeImage}>
+                  🔍 تحليل الصورة
+                </button>
+                <button className="btn-secondary" onClick={reset}>
+                  تغيير الصورة
+                </button>
+              </div>
+            )}
+            {status === "analyzing" && (
+              <button className="btn-danger" disabled style={{ opacity: 0.6 }}>
+                جارٍ التحليل...
+              </button>
+            )}
+            {(status === "done" || status === "error") && (
               <div className="done-actions">
                 <button
                   className="btn-primary"
@@ -255,31 +330,18 @@ const Camera = () => {
                 >
                   عرض التقدم →
                 </button>
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setStatus("idle");
-                    setResult(null);
-                    setFrameCount(0);
-                    setAnalysisHistory([]);
-                  }}
-                >
-                  جلسة جديدة
+                <button className="btn-secondary" onClick={reset}>
+                  صورة جديدة
                 </button>
               </div>
-            ) : (
-              <button className="btn-danger" onClick={stopSession}>
-                ⏹ إنهاء الجلسة
-              </button>
             )}
           </div>
         </div>
 
-        {/* Results Panel */}
+        {/* RIGHT: Results */}
         <div className="results-panel">
-          {/* Live Result */}
           <div className="result-card">
-            <h3>نتيجة التحليل الحالية</h3>
+            <h3>نتيجة التحليل</h3>
             {result ? (
               <div className="score-display">
                 <div
@@ -291,8 +353,6 @@ const Camera = () => {
                   </span>
                   <span className="score-label">ثقة</span>
                 </div>
-
-                {/* Label badge */}
                 <div
                   style={{
                     marginTop: 12,
@@ -307,10 +367,72 @@ const Camera = () => {
                 >
                   {labelAr(result.label)}
                 </div>
+                {result.regions && (
+                  <div
+                    style={{
+                      marginTop: 14,
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    {[
+                      { key: "eye", label: "العين" },
+                      { key: "eyebrow", label: "الحاجب" },
+                      { key: "mouth", label: "الفم" },
+                    ].map(({ key, label }) =>
+                      result.regions[key] ? (
+                        <div
+                          key={key}
+                          style={{
+                            background: "#f7f7fb",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              fontSize: 13,
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span style={{ fontWeight: 600 }}>{label}</span>
+                            <span style={{ color: "#6c47ff", fontWeight: 700 }}>
+                              {labelAr(result.regions[key].label)} —{" "}
+                              {Math.round(result.regions[key].confidence ?? 0)}%
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              height: 6,
+                              borderRadius: 3,
+                              background: "#e0e0e0",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                borderRadius: 3,
+                                background: getScoreColor(
+                                  result.regions[key].confidence ?? 0,
+                                ),
+                                width: `${result.regions[key].confidence ?? 0}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ) : null,
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="no-result">
-                <p>في انتظار أول تحليل...</p>
+                <p>في انتظار التحليل...</p>
                 <div className="pulse-dots">
                   <span />
                   <span />
@@ -320,50 +442,13 @@ const Camera = () => {
             )}
           </div>
 
-          {/* History */}
-          {analysisHistory.length > 0 && (
-            <div className="result-card">
-              <h3>سجل الجلسة</h3>
-              <div className="history-list">
-                {analysisHistory.map((item, i) => (
-                  <div className="history-item" key={i}>
-                    <span className="history-time">{item.time}</span>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "#6c47ff",
-                        minWidth: 50,
-                      }}
-                    >
-                      {labelAr(item.label)}
-                    </div>
-                    <div className="history-bar-wrap">
-                      <div
-                        className="history-bar"
-                        style={{
-                          width: `${item.score}%`,
-                          backgroundColor: getScoreColor(item.score),
-                        }}
-                      />
-                    </div>
-                    <span className="history-score">
-                      {Math.round(item.score)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tips */}
           <div className="result-card tips-card">
-            <h3>💡 نصائح للجلسة</h3>
+            <h3>💡 نصائح للصورة</h3>
             <ul>
               <li>تأكد من إضاءة جيدة على وجهك</li>
-              <li>اجلس مقابل الكاميرا مباشرة</li>
-              <li>حافظ على مسافة 30–50 سم من الشاشة</li>
-              <li>اتبع تعليمات الطبيب خلال الجلسة</li>
+              <li>الوجه واضح ومواجه للكاميرا مباشرة</li>
+              <li>لا يوجد حواجب أو نظارات تحجب الوجه</li>
+              <li>صورة واضحة وغير ضبابية</li>
             </ul>
           </div>
         </div>
