@@ -77,7 +77,7 @@ const translations = {
       viewProgress: "عرض التقدم →",
       newPhoto: "صورة جديدة",
       analyzingBtn: "جارٍ التحليل...",
-      readyToCapture: "اضغط \"التقاط\" عندما تكون جاهزاً",
+      readyToCapture: 'اضغط "التقاط" عندما تكون جاهزاً',
       statusChoose: "اختر صورة للبدء",
       statusCamera: "الكاميرا مفتوحة — التقط الصورة",
       statusReady: "الصورة جاهزة — اضغط تحليل",
@@ -137,7 +137,7 @@ const translations = {
       subtitle: "جلستك العلاجية اليومية",
       todaySession: "جلسة اليوم",
       duration: "المدة: 20 دقيقة",
-      start: "ابدأ الجلسة 🚀",
+      start: "ابدأ الجلسة ",
       loading: "جارٍ التحميل...",
       loadingVideos: "جارٍ تحميل الفيديوهات...",
       noVideos: "لا توجد فيديوهات متاحة",
@@ -187,10 +187,11 @@ const translations = {
       saveChanges: "حفظ التغييرات",
       faq: "الأسئلة الشائعة",
       faqNoAnswer: "💬 لم تجد إجابة لسؤالك؟",
-      faqContactUs: "تواصل معنا من خلال صفحة \"اتصل بنا\"",
+      faqContactUs: 'تواصل معنا من خلال صفحة "اتصل بنا"',
       contactUs: "اتصل بنا",
       contactHeroTitle: "نحن هنا لمساعدتك",
-      contactHeroDesc: "لا تتردد في التواصل معنا في أي وقت، فريق الدعم لدينا متاح على مدار الساعة",
+      contactHeroDesc:
+        "لا تتردد في التواصل معنا في أي وقت، فريق الدعم لدينا متاح على مدار الساعة",
       contactEmail: "البريد الإلكتروني",
       contactWhatsapp: "واتساب",
       contactWebsite: "الموقع الإلكتروني",
@@ -199,7 +200,8 @@ const translations = {
       workingHoursTime: "9 صباحاً - 9 مساءً",
       aboutApp: "عن التطبيق",
       version: "الإصدار 1.0.0",
-      aboutDesc: "Cranio AI هو تطبيق ذكي يُقدم لك تقييمًا مبدئيًا لحالتك الصحية من خلال تحليل الوجه باستخدام تقنيات الذكاء الاصطناعي المتقدمة. نسعى لجعل الرعاية الصحية أكثر سهولة وإتاحةً للجميع.",
+      aboutDesc:
+        "Cranio AI هو تطبيق ذكي يُقدم لك تقييمًا مبدئيًا لحالتك الصحية من خلال تحليل الوجه باستخدام تقنيات الذكاء الاصطناعي المتقدمة. نسعى لجعل الرعاية الصحية أكثر سهولة وإتاحةً للجميع.",
       appFeatures: "مميزات التطبيق",
       feature1Title: "فحص دقيق",
       feature1Desc: "تحليل متقدم بتقنيات الذكاء الاصطناعي",
@@ -209,7 +211,8 @@ const translations = {
       feature3Desc: "احصل على تقييمك في ثوانٍ معدودة",
       feature4Title: "متابعة مستمرة",
       feature4Desc: "تتبع تقدمك وتحسنك عبر الزمن",
-      disclaimer: "⚠️ تنبيه: هذا التطبيق أداة فحص مبدئية فقط ولا يُغني عن استشارة الطبيب المختص للحصول على تشخيص طبي دقيق.",
+      disclaimer:
+        "⚠️ تنبيه: هذا التطبيق أداة فحص مبدئية فقط ولا يُغني عن استشارة الطبيب المختص للحصول على تشخيص طبي دقيق.",
       copyright: "© 2025 Cranio AI — جميع الحقوق محفوظة",
       defaultUser: "المستخدم",
       changePhoto: "اضغط لتغيير الصورة",
@@ -225,13 +228,17 @@ const translations = {
       invalidImage: "يرجى اختيار صورة صالحة",
       imageTooLarge: "حجم الصورة يجب أن يكون أقل من 5MB",
       faqQ1: "كيف أبدأ استخدام التطبيق؟",
-      faqA1: "بعد تسجيل الدخول، سيتم توجيهك تلقائيًا إلى الشاشة الرئيسية. اضغط على \"Rate via Camera\" أو \"Rate via Chat\"، ثم اتبع التعليمات الظاهرة على الشاشة.",
+      faqA1:
+        'بعد تسجيل الدخول، سيتم توجيهك تلقائيًا إلى الشاشة الرئيسية. اضغط على "Rate via Camera" أو "Rate via Chat"، ثم اتبع التعليمات الظاهرة على الشاشة.',
       faqQ2: "ما هي شروط إجراء فحص صحيح؟",
-      faqA2: "يجب أن تكون في مكان جيد الإضاءة، وأن تضع الهاتف بمستوى العين، مع إزالة أي عوائق على الوجه مثل النظارات الشمسية أو الكمامات لضمان دقة التحليل.",
+      faqA2:
+        "يجب أن تكون في مكان جيد الإضاءة، وأن تضع الهاتف بمستوى العين، مع إزالة أي عوائق على الوجه مثل النظارات الشمسية أو الكمامات لضمان دقة التحليل.",
       faqQ3: "هل النتائج تُعتبر تشخيصًا طبيًا نهائيًا؟",
-      faqA3: "لا، التطبيق هو أداة فحص مبدئي للمساعدة والتنبيه فقط. يجب دائمًا استشارة طبيب مختص للحصول على تشخيص طبي دقيق.",
+      faqA3:
+        "لا، التطبيق هو أداة فحص مبدئي للمساعدة والتنبيه فقط. يجب دائمًا استشارة طبيب مختص للحصول على تشخيص طبي دقيق.",
       faqQ4: "كيف يتم حماية بياناتي؟",
-      faqA4: "نحن نأخذ الخصوصية بجدية؛ فجميع البيانات والتحليلات مشفرة، كما أن صورك الشخصية لا تتم مشاركتها أبدًا مع أي جهات خارجية.",
+      faqA4:
+        "نحن نأخذ الخصوصية بجدية؛ فجميع البيانات والتحليلات مشفرة، كما أن صورك الشخصية لا تتم مشاركتها أبدًا مع أي جهات خارجية.",
     },
   },
 
@@ -314,7 +321,7 @@ const translations = {
       viewProgress: "View Progress →",
       newPhoto: "New Photo",
       analyzingBtn: "Analyzing...",
-      readyToCapture: "Press \"Capture\" when ready",
+      readyToCapture: 'Press "Capture" when ready',
       statusChoose: "Choose a photo to get started",
       statusCamera: "Camera open — capture your photo",
       statusReady: "Photo ready — press Analyze",
@@ -424,10 +431,11 @@ const translations = {
       saveChanges: "Save Changes",
       faq: "FAQ",
       faqNoAnswer: "💬 Didn't find your answer?",
-      faqContactUs: "Contact us through the \"Contact Us\" page",
+      faqContactUs: 'Contact us through the "Contact Us" page',
       contactUs: "Contact Us",
       contactHeroTitle: "We're here to help",
-      contactHeroDesc: "Don't hesitate to reach out anytime, our support team is available 24/7",
+      contactHeroDesc:
+        "Don't hesitate to reach out anytime, our support team is available 24/7",
       contactEmail: "Email",
       contactWhatsapp: "WhatsApp",
       contactWebsite: "Website",
@@ -436,7 +444,8 @@ const translations = {
       workingHoursTime: "9 AM - 9 PM",
       aboutApp: "About the App",
       version: "Version 1.0.0",
-      aboutDesc: "Cranio AI is a smart app that provides you with a preliminary health assessment through facial analysis using advanced AI technologies. We strive to make healthcare more accessible for everyone.",
+      aboutDesc:
+        "Cranio AI is a smart app that provides you with a preliminary health assessment through facial analysis using advanced AI technologies. We strive to make healthcare more accessible for everyone.",
       appFeatures: "App Features",
       feature1Title: "Accurate Scan",
       feature1Desc: "Advanced analysis with AI technologies",
@@ -446,7 +455,8 @@ const translations = {
       feature3Desc: "Get your assessment in seconds",
       feature4Title: "Continuous Tracking",
       feature4Desc: "Track your progress and improvement over time",
-      disclaimer: "⚠️ Notice: This app is a preliminary screening tool only and does not replace consulting a specialist for an accurate medical diagnosis.",
+      disclaimer:
+        "⚠️ Notice: This app is a preliminary screening tool only and does not replace consulting a specialist for an accurate medical diagnosis.",
       copyright: "© 2025 Cranio AI — All rights reserved",
       defaultUser: "User",
       changePhoto: "Tap to change photo",
@@ -462,13 +472,17 @@ const translations = {
       invalidImage: "Please select a valid image",
       imageTooLarge: "Image size must be less than 5MB",
       faqQ1: "How do I start using the app?",
-      faqA1: "After signing in, you'll be automatically directed to the home screen. Tap \"Rate via Camera\" or \"Rate via Chat\", then follow the on-screen instructions.",
+      faqA1:
+        'After signing in, you\'ll be automatically directed to the home screen. Tap "Rate via Camera" or "Rate via Chat", then follow the on-screen instructions.',
       faqQ2: "What are the conditions for a proper scan?",
-      faqA2: "You should be in a well-lit area, hold your phone at eye level, and remove any obstructions from your face like sunglasses or masks to ensure analysis accuracy.",
+      faqA2:
+        "You should be in a well-lit area, hold your phone at eye level, and remove any obstructions from your face like sunglasses or masks to ensure analysis accuracy.",
       faqQ3: "Are the results a final medical diagnosis?",
-      faqA3: "No, the app is a preliminary screening tool for assistance and awareness only. Always consult a specialist for an accurate medical diagnosis.",
+      faqA3:
+        "No, the app is a preliminary screening tool for assistance and awareness only. Always consult a specialist for an accurate medical diagnosis.",
       faqQ4: "How is my data protected?",
-      faqA4: "We take privacy seriously; all data and analyses are encrypted, and your personal photos are never shared with any third parties.",
+      faqA4:
+        "We take privacy seriously; all data and analyses are encrypted, and your personal photos are never shared with any third parties.",
     },
   },
 };
