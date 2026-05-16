@@ -51,15 +51,15 @@ const Home = () => {
               <div className="stat-value">
                 95<span className="percent">%</span>
               </div>
-              <div className="stat-label">{h.stats.improvement}</div>
+              <div className="stat-label">{h.improvement}</div>{" "}
             </div>
             <div>
               500<span className="percent">+</span>
-              <div className="stat-label">{h.stats.sessions}</div>
+              <div className="stat-label">{h.sessions}</div>{" "}
             </div>
             <div>
               98<span className="percent">%</span>
-              <div className="stat-label">{h.stats.satisfaction}</div>
+              <div className="stat-label">{h.satisfaction}</div>{" "}
             </div>
           </div>
         </div>
