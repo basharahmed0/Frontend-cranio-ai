@@ -123,11 +123,30 @@ const Camera = () => {
         return;
       }
       if (json?.success && json?.prediction) {
+        const { label, confidence } = json.prediction;
         setResult({
-          label: json.prediction.label,
-          score: json.prediction.confidence ?? 0,
+          label,
+          score: confidence ?? 0,
           regions: json.predictions ?? null,
         });
+
+        // حفظ في localStorage عشان Tracking تقراه
+        try {
+          const newEntry = {
+            time: new Date().toLocaleTimeString("ar-EG"),
+            date: new Date().toISOString(),
+            score: confidence ?? 0,
+            label,
+          };
+          const existing = JSON.parse(
+            localStorage.getItem("analysisResults") || "[]",
+          );
+          existing.push(newEntry);
+          localStorage.setItem("analysisResults", JSON.stringify(existing));
+        } catch {
+          /* ignore */
+        }
+
         setStatus("done");
       } else {
         setAnalysisError("الخادم لم يُرجع نتيجة صالحة.");
