@@ -11,9 +11,23 @@ import {
 } from "recharts";
 import { apiRequest } from "./api";
 
+// label → Arabic + color
+const labelInfo = (label) => {
+  const map = {
+    Normal: { ar: "طبيعي", color: "#4cd964" },
+    Mild: { ar: "خفيف", color: "#6c47ff" },
+    Moderate: { ar: "متوسط", color: "#ffcc00" },
+    Moderate_Severe: { ar: "شديد نسبياً", color: "#ff8c00" },
+    "Moderate Severe": { ar: "شديد نسبياً", color: "#ff8c00" },
+    Severe: { ar: "شديد", color: "#ff3b30" },
+  };
+  return map[label] ?? { ar: label ?? "—", color: "#999" };
+};
+
 const Tracking = () => {
   const [chartData, setChartData] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [localResults, setLocalResults] = useState([]);
   const [summary, setSummary] = useState({
     improvement: 0,
     daysRemaining: 0,
@@ -23,12 +37,21 @@ const Tracking = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ── قراءة نتايج الكاميرا من localStorage ──
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("analysisResults") || "[]",
+      );
+      setLocalResults(stored);
+    } catch {
+      setLocalResults([]);
+    }
+
+    // ── جلب بيانات الـ API ──
     const fetchData = async () => {
       try {
         setLoading(true);
         const res = await apiRequest("/api/Progress/dashboard");
-        console.log("FULL RESPONSE:", res);
-        console.log("DATA STRING:", JSON.stringify(res?.data, null, 2));
 
         const dashboard = res?.data;
         const sessionDetails = dashboard?.sessionDetails || [];
@@ -36,7 +59,6 @@ const Tracking = () => {
         const daysRemaining = dashboard?.daysRemaining || 0;
         const completedSessions = dashboard?.completedSessions || 0;
 
-        // improvementCurve is array of objects { sessionNumber, improvementPercentage, date }
         const formatted = (dashboard?.improvementCurve || []).map((item) => ({
           name: `جلسة ${item.sessionNumber}`,
           value: Math.round(item.improvementPercentage || 0),
@@ -81,6 +103,20 @@ const Tracking = () => {
     fetchData();
   }, []);
 
+  // ── حساب متوسط الـ confidence من نتايج الكاميرا ──
+  const avgConfidence =
+    localResults.length > 0
+      ? (
+          localResults.reduce((s, r) => s + (r.score || 0), 0) /
+          localResults.length
+        ).toFixed(1)
+      : null;
+
+  const lastLabel =
+    localResults.length > 0
+      ? localResults[localResults.length - 1].label
+      : null;
+
   if (loading)
     return (
       <div className="fulltracking">
@@ -96,6 +132,7 @@ const Tracking = () => {
           <p>تابع تحسنك عبر الجلسات العلاجية</p>
         </div>
 
+        {/* ── إحصائيات ── */}
         <div className="statsics">
           <div className="stat">
             <ul>
@@ -108,10 +145,103 @@ const Tracking = () => {
               <li>
                 {summary.completedSessions} <span>جلسات مكتملة</span>
               </li>
+              {lastLabel && (
+                <li>
+                  <span
+                    style={{
+                      color: labelInfo(lastLabel).color,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {labelInfo(lastLabel).ar}
+                  </span>{" "}
+                  <span>آخر تشخيص</span>
+                </li>
+              )}
+              {avgConfidence && (
+                <li>
+                  {avgConfidence}% <span>متوسط ثقة التحليل</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
+        {/* ── نتايج تحليل الكاميرا ── */}
+        {localResults.length > 0 && (
+          <div className="camera-results-section">
+            <h2>نتايج تحليل الصور</h2>
+
+            <div className="camera-summary">
+              <div className="cam-stat">
+                <span className="cam-val">{localResults.length}</span>
+                <span className="cam-label">صورة تم تحليلها</span>
+              </div>
+              <div className="cam-stat">
+                <span className="cam-val">{avgConfidence}%</span>
+                <span className="cam-label">متوسط الثقة</span>
+              </div>
+              {lastLabel && (
+                <div className="cam-stat">
+                  <span
+                    className="cam-val"
+                    style={{ color: labelInfo(lastLabel).color }}
+                  >
+                    {labelInfo(lastLabel).ar}
+                  </span>
+                  <span className="cam-label">آخر تشخيص</span>
+                </div>
+              )}
+            </div>
+
+            <div className="frames-list">
+              {localResults
+                .slice(-10)
+                .reverse()
+                .map((r, i) => {
+                  const info = labelInfo(r.label);
+                  return (
+                    <div className="frame-row" key={i}>
+                      <span className="frame-time">{r.time}</span>
+                      <span
+                        className="frame-label"
+                        style={{
+                          background: info.color + "22",
+                          color: info.color,
+                        }}
+                      >
+                        {info.ar}
+                      </span>
+                      <div className="frame-bar-wrap">
+                        <div
+                          className="frame-bar"
+                          style={{
+                            width: `${r.score}%`,
+                            background: info.color,
+                          }}
+                        />
+                      </div>
+                      <span className="frame-score">
+                        {Math.round(r.score)}%
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <button
+              className="clear-btn"
+              onClick={() => {
+                localStorage.removeItem("analysisResults");
+                setLocalResults([]);
+              }}
+            >
+              🗑 مسح نتايج التحليل
+            </button>
+          </div>
+        )}
+
+        {/* ── منحنى التحسن ── */}
         <div className="graph">
           <div className="title">
             <h2>منحنى التحسن</h2>
@@ -123,7 +253,12 @@ const Tracking = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#6C63FF" />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#6C63FF"
+                  strokeWidth={2}
+                />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -138,19 +273,26 @@ const Tracking = () => {
           </div>
         </div>
 
+        {/* ── تفاصيل الجلسات ── */}
         <div className="details-session">
           <h2>تفاصيل الجلسات</h2>
-          {sessions.map((session, index) => (
-            <div className="session-row" key={index}>
-              <div className="change">{session.change}</div>
-              <div className="bar-container">
-                <div className="bar" style={{ width: `${session.value}%` }}>
-                  {session.value}%
+          {sessions.length > 0 ? (
+            sessions.map((session, index) => (
+              <div className="session-row" key={index}>
+                <div className="change">{session.change}</div>
+                <div className="bar-container">
+                  <div className="bar" style={{ width: `${session.value}%` }}>
+                    {session.value}%
+                  </div>
                 </div>
+                <div className="session-name">{session.name}</div>
               </div>
-              <div className="session-name">{session.name}</div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p style={{ color: "#aaa", textAlign: "center", padding: "1rem" }}>
+              لا توجد جلسات مسجلة بعد
+            </p>
+          )}
         </div>
       </div>
     </div>
