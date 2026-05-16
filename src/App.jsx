@@ -1,7 +1,6 @@
 import "./App.css";
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { LangProvider } from "./LangContext";
 
 import Home from "./Components/Home";
 import Signup from "./Components/Signup";
