@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import "./nav.css";
 import { NavLink } from "react-router-dom";
+import { useLang } from "./LangContext";
 
 const Nav = () => {
+  const { t, lang, toggle } = useLang();
+
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(3);
   const [showNotificationBadge, setShowNotificationBadge] = useState(true);
@@ -14,14 +17,14 @@ const Nav = () => {
   };
 
   return (
-    <header className="header" dir="rtl">
+    <header className="header" dir={t.dir}>
       {/* Logo */}
       <div className="header-logo">cranio ai</div>
 
       {/* Navigation */}
       <nav className="header-nav">
         <NavLink to="/" className="nav-item">
-          الرئيسية
+          {t.nav.home}
         </NavLink>
         <NavLink
           to="/traning"
@@ -29,18 +32,28 @@ const Nav = () => {
             isActive ? "nav-item active" : "nav-item"
           }
         >
-          تمارين
+          {t.nav.training}
         </NavLink>
         <NavLink to="/tracking" className="nav-item">
-          التقدم
+          {t.nav.tracking}
         </NavLink>
       </nav>
-      {/* Left Icons */}
 
+      {/* Left Icons */}
       <div className="header-icons">
+        {/* Language Toggle */}
+        <button
+          className="lang-toggle"
+          onClick={toggle}
+          title={lang === "ar" ? "Switch to English" : "التبديل للعربية"}
+        >
+          {lang === "ar" ? "EN" : "ع"}
+        </button>
+
+        {/* Notifications */}
         <div
           className="icon-button"
-          title="الإشعارات"
+          title={t.nav.notifications}
           onClick={handleNotificationClick}
         >
           <img src="/image/logo/notf.png" alt="" />
@@ -49,13 +62,15 @@ const Nav = () => {
           )}
           {open && (
             <div className="notification-menu">
-              <p>📢 عندك إشعار جديد</p>
-              <p>✅ تم تحديث الجلسة</p>
-              <p>⚡ فيه تقرير جاهز</p>
+              <p>{t.notifications.new}</p>
+              <p>{t.notifications.updated}</p>
+              <p>{t.notifications.report}</p>
             </div>
           )}
         </div>
-        <div className="icon-button" title="الملف الشخصي">
+
+        {/* Profile */}
+        <div className="icon-button" title={t.nav.profile}>
           <NavLink to="/profile">
             <img src="/image/logo/profile.png" alt="" />
           </NavLink>

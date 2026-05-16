@@ -1,27 +1,28 @@
 import React from "react";
 import "./Home.css";
 import { NavLink } from "react-router-dom";
-
 import Footer from "./Footer";
+import { useLang } from "./LangContext";
 
 const Home = () => {
+  const { t } = useLang();
+  const h = t.home;
+
   return (
     <>
-      {/* <Nav /> */}
-
       <div className="home-Container">
         <div className="content">
-          <h1>كيف تشعر اليوم؟</h1>
-          <p>نظم مفهوم طائف تساهمات على الخمس</p>
+          <h1>{h.title}</h1>
+          <p>{h.subtitle}</p>
         </div>
         <div className="track">
           <NavLink to="/camera">
-            {" "}
             <img src="/image/buttons/cam.png" alt="" />
-            <p>لمتابعه بالكاميرا</p>
+            <p>{h.cameraBtn}</p>
           </NavLink>
         </div>
       </div>
+
       <div className="lastbox">
         <div className="card">
           <div className="logs">
@@ -29,39 +30,36 @@ const Home = () => {
               <h2>cranio ai</h2>
               <div className="avatar">C</div>
             </div>
-            <p className="card-description">
-              يساعدك على متابعة جلسات العلاج و تقييم حالتك بسهولة
-            </p>
+            <p className="card-description">{h.description}</p>
           </div>
           <div className="features">
             <div>
-              <span className="check">✔</span> تقارير مفصلة
+              <span className="check">✔</span> {h.features.reports}
             </div>
             <div>
-              <span className="check">✔</span> متابعة مستمرة
+              <span className="check">✔</span> {h.features.monitoring}
             </div>
             <div>
-              <span className="check">✔</span> نتائج مضمونة
+              <span className="check">✔</span> {h.features.results}
             </div>
             <div>
-              <span className="check">✔</span> دعم متخصص
+              <span className="check">✔</span> {h.features.support}
             </div>
           </div>
-          {/* Stats */}
           <div className="stats">
             <div>
               <div className="stat-value">
                 95<span className="percent">%</span>
               </div>
-              <div className="stat-label">تحسن ملحوظ</div>
+              <div className="stat-label">{h.stats.improvement}</div>
             </div>
             <div>
               500<span className="percent">+</span>
-              <div className="stat-label">جلسة علاج</div>
+              <div className="stat-label">{h.stats.sessions}</div>
             </div>
             <div>
               98<span className="percent">%</span>
-              <div className="stat-label">رضا العملاء</div>
+              <div className="stat-label">{h.stats.satisfaction}</div>
             </div>
           </div>
         </div>

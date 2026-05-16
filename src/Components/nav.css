@@ -176,6 +176,27 @@
   color: #5b4fde;
   text-shadow: 0 2px 8px rgba(91, 79, 222, 0.2);
 }
+/* ── Language Toggle Button ── */
+.lang-toggle {
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.2s,
+    transform 0.1s;
+  letter-spacing: 0.5px;
+}
+
+.lang-toggle:hover {
+  background: #5a52d5;
+  transform: scale(1.05);
+}
 
 /* Responsive */
 @media (max-width: 768px) {
