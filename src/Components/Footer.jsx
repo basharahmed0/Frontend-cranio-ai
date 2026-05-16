@@ -42,7 +42,7 @@ const Footer = () => {
         <div className="footer-section navigation-section">
           <h4 className="section-title">{f.quickLinks}</h4>
           <ul className="links-list">
-            {f.links.map((link, i) => (
+            {(f.links || []).map((link, i) => (
               <li key={i}>
                 <a href={link.href} className="footer-link">
                   {link.label}
@@ -56,7 +56,7 @@ const Footer = () => {
         <div className="footer-section contact-section">
           <h4 className="section-title">{f.contactUs}</h4>
           <div className="contact-list">
-            {f.contact.map((c, i) => (
+            {(f.contact || []).map((c, i) => (
               <div key={i} className="contact-item">
                 <span className="contact-icon">{c.icon}</span>
                 <div className="contact-info">
