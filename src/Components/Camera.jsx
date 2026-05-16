@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "./api";
+import { BASE_URL, apiRequest } from "./api";
 import "./camera.css";
 
 const Camera = () => {
@@ -101,13 +101,13 @@ const Camera = () => {
     try {
       const formData = new FormData();
       formData.append("image", imageBlob, "photo.jpg");
+
       const res = await fetch(`${BASE_URL}/api/Analysis/analyze`, {
         method: "POST",
-        headers: {
-          "ngrok-skip-browser-warning": "69420",
-        },
+        headers: { "ngrok-skip-browser-warning": "69420" },
         body: formData,
       });
+
       const text = await res.text();
       let json = null;
       if (text) {
@@ -117,20 +117,23 @@ const Camera = () => {
           /* ignore */
         }
       }
+
       if (!res.ok) {
         setAnalysisError(json?.message || `فشل التحليل (${res.status})`);
         setStatus("error");
         return;
       }
+
       if (json?.success && json?.prediction) {
         const { label, confidence } = json.prediction;
+
         setResult({
           label,
           score: confidence ?? 0,
           regions: json.predictions ?? null,
         });
 
-        // حفظ في localStorage عشان Tracking تقراه
+        // ── حفظ في localStorage عشان Tracking تقراه ──
         try {
           const newEntry = {
             time: new Date().toLocaleTimeString("ar-EG"),
@@ -145,6 +148,29 @@ const Camera = () => {
           localStorage.setItem("analysisResults", JSON.stringify(existing));
         } catch {
           /* ignore */
+        }
+
+        // ── إنشاء جلسة وإنهاؤها عشان يتحسب في التقدم ──
+        try {
+          const sessionRes = await apiRequest("/api/Sessions", {
+            method: "POST",
+            body: JSON.stringify({ notes: "جلسة تحليل صورة" }),
+          });
+          const newSessionId = sessionRes?.data?.id ?? sessionRes?.id ?? null;
+          if (newSessionId) {
+            await apiRequest(`/api/Sessions/${newSessionId}/start`, {
+              method: "POST",
+            });
+            await apiRequest("/api/Sessions/complete", {
+              method: "POST",
+              body: JSON.stringify({
+                sessionId: newSessionId,
+                notes: `تحليل: ${label} - ${Math.round(confidence ?? 0)}%`,
+              }),
+            });
+          }
+        } catch {
+          /* الجلسة اختيارية — مش هتأثر على التحليل */
         }
 
         setStatus("done");
