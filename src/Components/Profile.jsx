@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import "./profile.css";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "./api";
+import { useLang } from "./LangContext";
 
 // =================== PERSONAL DATA PAGE ===================
 const PersonalData = ({ onBack }) => {
+  const { t } = useLang();
+  const p = t.profile;
   const [form, setForm] = useState({ fullName: "", email: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,7 +32,7 @@ const PersonalData = ({ onBack }) => {
 
   const handleSave = async () => {
     if (!form.fullName.trim()) {
-      setMessage({ text: "الاسم لا يمكن أن يكون فارغاً", type: "error" });
+      setMessage({ text: p.nameRequired, type: "error" });
       return;
     }
     setSaving(true);
@@ -44,9 +47,9 @@ const PersonalData = ({ onBack }) => {
         "user",
         JSON.stringify({ ...storedUser, fullName: form.fullName }),
       );
-      setMessage({ text: "تم حفظ البيانات بنجاح ✓", type: "success" });
+      setMessage({ text: p.saveSuccess, type: "success" });
     } catch (err) {
-      setMessage({ text: "فشل الحفظ: " + err.message, type: "error" });
+      setMessage({ text: p.saveFail + err.message, type: "error" });
     } finally {
       setSaving(false);
     }
@@ -60,7 +63,7 @@ const PersonalData = ({ onBack }) => {
     fontSize: "14px",
     fontFamily: "inherit",
     outline: "none",
-    direction: "rtl",
+    direction: t.dir,
     background: "#fff",
   };
   const disabledInputStyle = {
@@ -80,12 +83,12 @@ const PersonalData = ({ onBack }) => {
   if (loading)
     return (
       <div style={{ padding: "2rem", textAlign: "center", color: "#888" }}>
-        جاري التحميل...
+        {p.loading}
       </div>
     );
 
   return (
-    <div style={{ padding: "20px", direction: "rtl", fontFamily: "inherit" }}>
+    <div style={{ padding: "20px", direction: t.dir, fontFamily: "inherit" }}>
       <div
         style={{
           display: "flex",
@@ -109,31 +112,31 @@ const PersonalData = ({ onBack }) => {
           ›
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a2e" }}>
-          البيانات الشخصية
+          {p.personalData}
         </h2>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
         <div>
-          <label style={labelStyle}>الاسم الكامل</label>
+          <label style={labelStyle}>{p.fullName}</label>
           <input
             style={inputStyle}
             value={form.fullName}
             onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-            placeholder="أدخل اسمك الكامل"
+            placeholder={p.fullNamePlaceholder}
           />
         </div>
 
         <div>
-          <label style={labelStyle}>البريد الإلكتروني</label>
+          <label style={labelStyle}>{p.emailLabel}</label>
           <input style={disabledInputStyle} value={form.email} disabled />
           <p style={{ fontSize: "11px", color: "#aaa", marginTop: "4px" }}>
-            لا يمكن تغيير البريد الإلكتروني
+            {p.emailCantChange}
           </p>
         </div>
 
         <div>
-          <label style={labelStyle}>كلمة المرور</label>
+          <label style={labelStyle}>{p.passwordLabel}</label>
           <input
             style={disabledInputStyle}
             value="••••••••"
@@ -141,7 +144,7 @@ const PersonalData = ({ onBack }) => {
             type="password"
           />
           <p style={{ fontSize: "11px", color: "#aaa", marginTop: "4px" }}>
-            تغيير كلمة المرور — قريباً
+            {p.passwordChangeSoon}
           </p>
         </div>
 
@@ -176,7 +179,7 @@ const PersonalData = ({ onBack }) => {
             cursor: saving ? "not-allowed" : "pointer",
           }}
         >
-          {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
+          {saving ? p.saving : p.saveChanges}
         </button>
       </div>
     </div>
@@ -185,29 +188,15 @@ const PersonalData = ({ onBack }) => {
 
 // =================== FAQ PAGE ===================
 const FAQPage = ({ onBack }) => {
+  const { t } = useLang();
+  const p = t.profile;
   const [openIndex, setOpenIndex] = useState(null);
 
   const faqData = [
-    {
-      question: "كيف أبدأ استخدام التطبيق؟",
-      answer:
-        'بعد تسجيل الدخول، سيتم توجيهك تلقائيًا إلى الشاشة الرئيسية. اضغط على "Rate via Camera" أو "Rate via Chat"، ثم اتبع التعليمات الظاهرة على الشاشة.',
-    },
-    {
-      question: "ما هي شروط إجراء فحص صحيح؟",
-      answer:
-        "يجب أن تكون في مكان جيد الإضاءة، وأن تضع الهاتف بمستوى العين، مع إزالة أي عوائق على الوجه مثل النظارات الشمسية أو الكمامات لضمان دقة التحليل.",
-    },
-    {
-      question: "هل النتائج تُعتبر تشخيصًا طبيًا نهائيًا؟",
-      answer:
-        "لا، التطبيق هو أداة فحص مبدئي للمساعدة والتنبيه فقط. يجب دائمًا استشارة طبيب مختص للحصول على تشخيص طبي دقيق.",
-    },
-    {
-      question: "كيف يتم حماية بياناتي؟",
-      answer:
-        "نحن نأخذ الخصوصية بجدية؛ فجميع البيانات والتحليلات مشفرة، كما أن صورك الشخصية لا تتم مشاركتها أبدًا مع أي جهات خارجية.",
-    },
+    { question: p.faqQ1, answer: p.faqA1 },
+    { question: p.faqQ2, answer: p.faqA2 },
+    { question: p.faqQ3, answer: p.faqA3 },
+    { question: p.faqQ4, answer: p.faqA4 },
   ];
 
   return (
@@ -236,7 +225,7 @@ const FAQPage = ({ onBack }) => {
           ›
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a2e" }}>
-          الأسئلة الشائعة
+          {p.faq}
         </h2>
       </div>
 
@@ -356,10 +345,10 @@ const FAQPage = ({ onBack }) => {
             fontWeight: "500",
           }}
         >
-          💬 لم تجد إجابة لسؤالك؟
+          {p.faqNoAnswer}
         </p>
         <p style={{ fontSize: "12px", color: "#888", margin: "6px 0 0 0" }}>
-          تواصل معنا من خلال صفحة "اتصل بنا"
+          {p.faqContactUs}
         </p>
       </div>
     </div>
@@ -368,22 +357,24 @@ const FAQPage = ({ onBack }) => {
 
 // =================== CONTACT US PAGE ===================
 const ContactUsPage = ({ onBack }) => {
+  const { t } = useLang();
+  const p = t.profile;
   const contactMethods = [
     {
       icon: "📧",
-      label: "البريد الإلكتروني",
+      label: p.contactEmail,
       value: "support@facecheck.com",
       color: "#6c47ff",
     },
     {
       icon: "📱",
-      label: "واتساب",
+      label: p.contactWhatsapp,
       value: "+966 55 123 4567",
       color: "#25D366",
     },
     {
       icon: "🌐",
-      label: "الموقع الإلكتروني",
+      label: p.contactWebsite,
       value: "www.facecheck.com",
       color: "#1DA1F2",
     },
@@ -396,7 +387,7 @@ const ContactUsPage = ({ onBack }) => {
   ];
 
   return (
-    <div style={{ padding: "20px", direction: "rtl", fontFamily: "inherit" }}>
+    <div style={{ padding: "20px", direction: t.dir, fontFamily: "inherit" }}>
       {/* Header */}
       <div
         style={{
@@ -421,7 +412,7 @@ const ContactUsPage = ({ onBack }) => {
           ›
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a2e" }}>
-          اتصل بنا
+          {p.contactUs}
         </h2>
       </div>
 
@@ -440,7 +431,7 @@ const ContactUsPage = ({ onBack }) => {
         <h3
           style={{ fontSize: "17px", fontWeight: "700", margin: "0 0 8px 0" }}
         >
-          نحن هنا لمساعدتك
+          {p.contactHeroTitle}
         </h3>
         <p
           style={{
@@ -450,8 +441,7 @@ const ContactUsPage = ({ onBack }) => {
             lineHeight: "1.7",
           }}
         >
-          لا تتردد في التواصل معنا في أي وقت، فريق الدعم لدينا متاح على مدار
-          الساعة
+          {p.contactHeroDesc}
         </p>
       </div>
 
@@ -540,7 +530,7 @@ const ContactUsPage = ({ onBack }) => {
             textAlign: "center",
           }}
         >
-          تابعنا على وسائل التواصل
+          {p.followUs}
         </h4>
         <div
           style={{
@@ -597,9 +587,9 @@ const ContactUsPage = ({ onBack }) => {
             lineHeight: "1.8",
           }}
         >
-          🕐 ساعات العمل: يومياً من{" "}
+          {p.workingHours}{" "}
           <span style={{ fontWeight: "600", color: "#555" }}>
-            9 صباحاً - 9 مساءً
+            {p.workingHoursTime}
           </span>
         </p>
       </div>
@@ -609,23 +599,17 @@ const ContactUsPage = ({ onBack }) => {
 
 // =================== ABOUT APP PAGE ===================
 const AboutAppPage = ({ onBack }) => {
+  const { t } = useLang();
+  const p = t.profile;
   const features = [
-    {
-      icon: "🎯",
-      title: "فحص دقيق",
-      desc: "تحليل متقدم بتقنيات الذكاء الاصطناعي",
-    },
-    { icon: "🔒", title: "خصوصية تامة", desc: "بياناتك مشفرة ومحمية بالكامل" },
-    {
-      icon: "⚡",
-      title: "نتائج فورية",
-      desc: "احصل على تقييمك في ثوانٍ معدودة",
-    },
-    { icon: "📊", title: "متابعة مستمرة", desc: "تتبع تقدمك وتحسنك عبر الزمن" },
+    { icon: "🎯", title: p.feature1Title, desc: p.feature1Desc },
+    { icon: "🔒", title: p.feature2Title, desc: p.feature2Desc },
+    { icon: "⚡", title: p.feature3Title, desc: p.feature3Desc },
+    { icon: "📊", title: p.feature4Title, desc: p.feature4Desc },
   ];
 
   return (
-    <div style={{ padding: "20px", direction: "rtl", fontFamily: "inherit" }}>
+    <div style={{ padding: "20px", direction: t.dir, fontFamily: "inherit" }}>
       {/* Header */}
       <div
         style={{
@@ -650,7 +634,7 @@ const AboutAppPage = ({ onBack }) => {
           ›
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a2e" }}>
-          عن التطبيق
+          {p.aboutApp}
         </h2>
       </div>
 
@@ -685,10 +669,10 @@ const AboutAppPage = ({ onBack }) => {
             margin: "0 0 6px 0",
           }}
         >
-          FaceCheck
+          Cranio AI
         </h3>
         <p style={{ fontSize: "13px", color: "#999", margin: 0 }}>
-          الإصدار 1.0.0
+          {p.version}
         </p>
       </div>
 
@@ -711,9 +695,7 @@ const AboutAppPage = ({ onBack }) => {
             textAlign: "center",
           }}
         >
-          FaceCheck هو تطبيق ذكي يُقدم لك تقييمًا مبدئيًا لحالتك الصحية من خلال
-          تحليل الوجه باستخدام تقنيات الذكاء الاصطناعي المتقدمة. نسعى لجعل
-          الرعاية الصحية أكثر سهولة وإتاحةً للجميع.
+          {p.aboutDesc}
         </p>
       </div>
 
@@ -727,7 +709,7 @@ const AboutAppPage = ({ onBack }) => {
           textAlign: "center",
         }}
       >
-        مميزات التطبيق
+        {p.appFeatures}
       </h4>
       <div
         style={{
@@ -806,8 +788,7 @@ const AboutAppPage = ({ onBack }) => {
             textAlign: "center",
           }}
         >
-          ⚠️ تنبيه: هذا التطبيق أداة فحص مبدئية فقط ولا يُغني عن استشارة الطبيب
-          المختص للحصول على تشخيص طبي دقيق.
+          {p.disclaimer}
         </p>
       </div>
 
@@ -820,7 +801,7 @@ const AboutAppPage = ({ onBack }) => {
           margin: "20px 0 0 0",
         }}
       >
-        © 2025 FaceCheck — جميع الحقوق محفوظة
+        {p.copyright}
       </p>
     </div>
   );
@@ -828,16 +809,18 @@ const AboutAppPage = ({ onBack }) => {
 
 // =================== MAIN PROFILE ===================
 const Profile = () => {
+  const { t } = useLang();
+  const p = t.profile;
   const [activeMenu, setActiveMenu] = useState("");
-  const [showPage, setShowPage] = useState(null); // null | "personalData" | "faq" | "contact" | "about"
+  const [showPage, setShowPage] = useState(null);
   const [user, setUser] = useState({ name: "", email: "" });
   const [profileImage, setProfileImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [stats, setStats] = useState([
-    { value: "—", label: "تقييمك" },
-    { value: "—", label: "جلسات مكتملة" },
-    { value: "—", label: "معدل التحسن" },
-    { value: "—", label: "تمرينة مكتملة" },
+    { value: "—", label: p.ratingLabel },
+    { value: "—", label: p.completedSessions },
+    { value: "—", label: p.improvementRate },
+    { value: "—", label: p.completedExercises },
   ]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
@@ -850,7 +833,7 @@ const Profile = () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
     if (storedUser.fullName || storedUser.email) {
       setUser({
-        name: storedUser.fullName || storedUser.email || "المستخدم",
+        name: storedUser.fullName || storedUser.email || p.defaultUser,
         email: storedUser.email || "",
       });
     }
@@ -867,7 +850,7 @@ const Profile = () => {
 
         if (profile) {
           setUser({
-            name: profile.fullName || profile.email || "المستخدم",
+            name: profile.fullName || profile.email || p.defaultUser,
             email: profile.email || "",
           });
           if (profile.profileImageUrl) setProfileImage(profile.profileImageUrl);
@@ -875,14 +858,14 @@ const Profile = () => {
 
         if (dashboard) {
           setStats([
-            { value: dashboard.completedSessions || 0, label: "جلسات مكتملة" },
+            { value: dashboard.completedSessions || 0, label: p.completedSessions },
             {
               value: `${dashboard.currentImprovement || 0}%`,
-              label: "معدل التحسن",
+              label: p.improvementRate,
             },
             {
               value: dashboard.sessionDetails?.length || 0,
-              label: "تمرينة مكتملة",
+              label: p.completedExercises,
             },
           ]);
         }
@@ -902,11 +885,11 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      alert("يرجى اختيار صورة صالحة");
+      alert(p.invalidImage);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert("حجم الصورة يجب أن يكون أقل من 5MB");
+      alert(p.imageTooLarge);
       return;
     }
 
@@ -929,21 +912,21 @@ const Profile = () => {
   };
 
   const accountSettings = [
-    { id: 1, label: "البيانات الشخصية", page: "personalData" },
-    { id: 2, label: "الاشعارات", page: null },
-    { id: 3, label: "الخصوصية", page: null },
+    { id: 1, label: p.personalData, page: "personalData" },
+    { id: 2, label: p.notifications, page: null },
+    { id: 3, label: p.privacy, page: null },
   ];
 
   const supportOptions = [
-    { id: 1, label: "اتصل بنا", page: "contact" },
-    { id: 2, label: "الأسئلة الشائعة", page: "faq" },
-    { id: 3, label: "عن التطبيق", page: "about" },
+    { id: 1, label: p.contactUs, page: "contact" },
+    { id: 2, label: p.faq, page: "faq" },
+    { id: 3, label: p.aboutApp, page: "about" },
   ];
 
   // ===== Sub Pages =====
   if (showPage === "personalData") {
     return (
-      <div className="user-profile" dir="rtl">
+      <div className="user-profile" dir={t.dir}>
         <div className="profile-container">
           <PersonalData onBack={() => setShowPage(null)} />
         </div>
@@ -953,7 +936,7 @@ const Profile = () => {
 
   if (showPage === "faq") {
     return (
-      <div className="user-profile" dir="rtl">
+      <div className="user-profile" dir={t.dir}>
         <div className="profile-container">
           <FAQPage onBack={() => setShowPage(null)} />
         </div>
@@ -963,7 +946,7 @@ const Profile = () => {
 
   if (showPage === "contact") {
     return (
-      <div className="user-profile" dir="rtl">
+      <div className="user-profile" dir={t.dir}>
         <div className="profile-container">
           <ContactUsPage onBack={() => setShowPage(null)} />
         </div>
@@ -973,7 +956,7 @@ const Profile = () => {
 
   if (showPage === "about") {
     return (
-      <div className="user-profile" dir="rtl">
+      <div className="user-profile" dir={t.dir}>
         <div className="profile-container">
           <AboutAppPage onBack={() => setShowPage(null)} />
         </div>
@@ -983,7 +966,7 @@ const Profile = () => {
 
   // ===== Main Profile Page =====
   return (
-    <div className="user-profile" dir="rtl">
+    <div className="user-profile" dir={t.dir}>
       <div className="profile-container">
         {/* PROFILE SECTION */}
         <div className="profile-section">
@@ -1067,7 +1050,7 @@ const Profile = () => {
                 textAlign: "center",
               }}
             >
-              اضغط لتغيير الصورة
+              {p.changePhoto}
             </p>
           </div>
 
@@ -1085,7 +1068,7 @@ const Profile = () => {
         {/* SETTINGS SECTION */}
         <div className="settings-section">
           <div className="settings-group">
-            <h3 className="settings-title">إعدادات الحساب</h3>
+            <h3 className="settings-title">{p.accountSettings}</h3>
             <div className="menu-list">
               {accountSettings.map((item) => (
                 <button
@@ -1104,7 +1087,7 @@ const Profile = () => {
           </div>
 
           <div className="settings-group">
-            <h3 className="settings-title">الدعم والمساعدة</h3>
+            <h3 className="settings-title">{p.supportHelp}</h3>
             <div className="menu-list">
               {supportOptions.map((item) => (
                 <button
@@ -1123,7 +1106,7 @@ const Profile = () => {
           </div>
 
           <button className="logout-button" onClick={handleLogout}>
-            تسجيل الخروج <img src="./image/loading/svg.png" alt="" />
+            {p.logout} <img src="./image/loading/svg.png" alt="" />
           </button>
         </div>
       </div>

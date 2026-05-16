@@ -1,73 +1,79 @@
-import React from "react";
-import "./Home.css";
+import React, { useState } from "react";
+import "./nav.css";
 import { NavLink } from "react-router-dom";
-import Footer from "./Footer";
 import { useLang } from "./LangContext";
 
-const Home = () => {
-  const { t } = useLang();
-  const h = t.home;
+const Nav = () => {
+  const { t, toggle, lang } = useLang();
+  const n = t.nav;
+  const [showNotifications, setShowNotifications] = useState(false);
 
   return (
-    <>
-      <div className="home-Container">
-        <div className="content">
-          <h1>{h.title}</h1>
-          <p>{h.subtitle}</p>
-        </div>
-        <div className="track">
-          <NavLink to="/camera">
-            <img src="/image/buttons/cam.png" alt="" />
-            <p>{h.cameraBtn}</p>
-          </NavLink>
-        </div>
-      </div>
-
-      <div className="lastbox">
-        <div className="card">
-          <div className="logs">
-            <div className="card-header">
-              <h2>cranio ai</h2>
-              <div className="avatar">C</div>
+    <header className="header">
+      {/* Icons */}
+      <div className="header-icons">
+        <button className="lang-toggle" onClick={toggle}>
+          {lang === "ar" ? "EN" : "عربي"}
+        </button>
+        <div
+          className="icon-button"
+          onClick={() => setShowNotifications(!showNotifications)}
+        >
+          🔔
+          <span className="notification-badge">3</span>
+          {showNotifications && (
+            <div className="notification-menu">
+              <p>{t.notifications.new}</p>
+              <p>{t.notifications.updated}</p>
+              <p>{t.notifications.report}</p>
             </div>
-            <p className="card-description">{h.description}</p>
-          </div>
-          <div className="features">
-            <div>
-              <span className="check">✔</span> {h.features.reports}
-            </div>
-            <div>
-              <span className="check">✔</span> {h.features.monitoring}
-            </div>
-            <div>
-              <span className="check">✔</span> {h.features.results}
-            </div>
-            <div>
-              <span className="check">✔</span> {h.features.support}
-            </div>
-          </div>
-          <div className="stats">
-            <div>
-              <div className="stat-value">
-                95<span className="percent">%</span>
-              </div>
-              <div className="stat-label">{h.improvement}</div>{" "}
-            </div>
-            <div>
-              500<span className="percent">+</span>
-              <div className="stat-label">{h.sessions}</div>{" "}
-            </div>
-            <div>
-              98<span className="percent">%</span>
-              <div className="stat-label">{h.satisfaction}</div>{" "}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      <Footer />
-    </>
+      {/* Navigation */}
+      <nav className="header-nav">
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          {n.profile}
+        </NavLink>
+        <NavLink
+          to="/tracking"
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          {n.tracking}
+        </NavLink>
+        <NavLink
+          to="/traning"
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          {n.training}
+        </NavLink>
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          {n.home}
+        </NavLink>
+      </nav>
+
+      {/* Logo */}
+      <NavLink to="/" className="header-logo" style={{ textDecoration: "none" }}>
+        Cranio AI
+      </NavLink>
+    </header>
   );
 };
 
-export default Home;
+export default Nav;

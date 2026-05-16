@@ -19,7 +19,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(""); setLoading(true);
     if (formData.password !== formData.confirmPassword) {
-      setError("كلمة المرور وتأكيدها غير متطابقين");
+      setError(s.passwordMismatch);
       setLoading(false); return;
     }
     try {
@@ -32,13 +32,13 @@ const Signup = () => {
       let data = null;
       if (text) { try { data = JSON.parse(text); } catch {} }
       if (response.ok) {
-        navigate("/signin", { state: { message: "تم إنشاء الحساب بنجاح! سجل دخولك الآن 🎉" } });
+        navigate("/signin", { state: { message: s.success } });
       } else {
         if (data?.errors) setError(Object.values(data.errors).flat().join(" - "));
-        else setError(data?.message || data?.title || `خطأ ${response.status}: فشل إنشاء الحساب`);
+        else setError(data?.message || data?.title || `${s.createFail} (${response.status})`);
       }
     } catch (error) {
-      setError("مشكلة في الشبكة: " + error.message);
+      setError(s.networkError + error.message);
     } finally { setLoading(false); }
   };
 
@@ -58,8 +58,8 @@ const Signup = () => {
         if (token) localStorage.setItem("token", token);
         if (data?.data?.user) localStorage.setItem("user", JSON.stringify(data.data.user));
         navigate("/");
-      } else { setError(data?.message || "فشل تسجيل الدخول بجوجل"); }
-    } catch (err) { setError("مشكلة في الشبكة: " + err.message); }
+      } else { setError(data?.message || s.googleFail); }
+    } catch (err) { setError(s.networkError + err.message); }
     finally { setLoading(false); }
   };
 
@@ -97,7 +97,7 @@ const Signup = () => {
         </div>
 
         <div className={styles.icons}>
-          <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError("فشل تسجيل الدخول بجوجل")} />
+          <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError(s.googleFail)} />
         </div>
 
         <p className={styles.account}>

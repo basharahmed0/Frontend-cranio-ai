@@ -39,10 +39,10 @@ const Signin = () => {
         if (data?.data?.user) localStorage.setItem("user", JSON.stringify(data.data.user));
         navigate("/");
       } else {
-        setError(data?.message || "فشل تسجيل الدخول بجوجل");
+        setError(data?.message || s.googleFail);
       }
     } catch (err) {
-      setError("مشكلة في الشبكة: " + err.message);
+      setError(s.networkError + err.message);
     } finally { setLoading(false); }
   };
 
@@ -64,14 +64,14 @@ const Signin = () => {
         else localStorage.setItem("user", JSON.stringify({ email }));
         navigate("/");
       } else {
-        let errorMessage = "فشل تسجيل الدخول";
+        let errorMessage = s.loginFail;
         if (data?.message) errorMessage = data.message;
         else if (data?.errors) errorMessage = Object.values(data.errors).flat().join(" - ");
         else if (data?.title) errorMessage = data.title;
         setError(`${errorMessage} (${response.status})`);
       }
     } catch (err) {
-      setError("مشكلة في الشبكة: " + err.message);
+      setError(s.networkError + err.message);
     } finally { setLoading(false); }
   };
 
@@ -116,7 +116,7 @@ const Signin = () => {
         </div>
 
         <div className="icons">
-          <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError("فشل تسجيل الدخول بجوجل")} />
+          <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError(s.googleFail)} />
         </div>
 
         <p className="account-signin">
